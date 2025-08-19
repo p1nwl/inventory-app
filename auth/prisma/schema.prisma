@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Theme {
+  LIGHT
+  DARK
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?    @unique
+  image         String?
+  emailVerified DateTime?
+  role          Role      @default(USER)
+  language      String    @default("en")
+  theme         Theme     @default(LIGHT)
+  accounts                 Account[]
+  sessions                 Session[]
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  ownedInventories      Inventory[]
+  accessibleInventories InventoryUserAccess[]
+  comments              Comment[]
+  likes                 Like[]
+  itemsCreated          Item[]
+
+  @@map("users")
+}
+
+model Inventory {
+  id                 String   @id @default(cuid())
+  title              String
+  description        String?
+  imageUrl           String?
+  category           String   
+  isPublic           Boolean  @default(false)
+  tags               String[] 
+  version            Int      @default(1) 
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  creator            User     @relation(fields: [creatorId], references: [id])
+  creatorId          String
+
+  customIdFormat     String[] 
+
+  stringField1Name   String?
+  stringField1Active Boolean  @default(false)
+  stringField2Name   String?
+  stringField2Active Boolean  @default(false)
+  stringField3Name   String?
+  stringField3Active Boolean  @default(false)
+
+  intField1Name      String?
+  intField1Active    Boolean  @default(false)
+  intField2Name      String?
+  intField2Active    Boolean  @default(false)
+  intField3Name      String?
+  intField3Active    Boolean  @default(false)
+
+  boolField1Name     String?
+  boolField1Active   Boolean  @default(false)
+  boolField2Name     String?
+  boolField2Active   Boolean  @default(false)
+  boolField3Name     String?
+  boolField3Active   Boolean  @default(false)
+
+  items              Item[]
+  comments           Comment[]
+  accessList         InventoryUserAccess[]
+  statistics         InventoryStats?
+
+  @@map("inventories")
+  @@unique([id, version])
+  @@index([creatorId])
+}
+
+model Item {
+  id             String   @id @default(cuid())
+  inventory      Inventory @relation(fields: [inventoryId], references: [id])
+  inventoryId    String
+  customId       String
+  version        Int      @default(1)
+  createdAt      DateTime @default(now())
+  createdBy      User     @relation(fields: [createdById], references: [id])
+  createdById    String
+
+  string1        String?
+  string2        String?
+  string3        String?
+  int1           Int?
+  int2           Int?
+  int3           Int?
+  bool1          Boolean?
+  bool2          Boolean?
+  bool3          Boolean?
+
+  likes          Like[]
+  comments       Comment[]
+
+  @@unique([inventoryId, customId])
+}
+
+model InventoryUserAccess {
+  id           String     @id @default(cuid())
+  inventory    Inventory  @relation(fields: [inventoryId], references: [id])
+  inventoryId  String
+  user         User       @relation(fields: [userId], references: [id])
+  userId       String
+  createdAt    DateTime   @default(now())
+
+  @@unique([inventoryId, userId])
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  text        String   
+  author      User     @relation(fields: [authorId], references: [id])
+  authorId    String
+  inventory   Inventory? @relation(fields: [inventoryId], references: [id])
+  inventoryId String?
+  item        Item?    @relation(fields: [itemId], references: [id])
+  itemId      String?
+  createdAt   DateTime @default(now())
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  item      Item     @relation(fields: [itemId], references: [id])
+  itemId    String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, itemId])
+  @@map("likes")
+}
+
+model InventoryStats {
+  id          String     @id @default(cuid())
+  inventory   Inventory  @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  inventoryId String     @unique
+  itemCount   Int        @default(0)
+  avgInt1     Float?
+  avgInt2     Float?
+  avgInt3     Float?
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token     String?  @db.Text
+  access_token      String?  @db.Text
+  expires_at         Int?
+  token_type        String?
+  scope             String?
+  id_token          String?  @db.Text
+  session_state     String?
+  oauth_token       String?  @db.Text
+  oauth_token_secret String? @db.Text
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String  @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
