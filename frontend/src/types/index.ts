@@ -43,6 +43,7 @@ export interface Inventory {
   updatedAt: string;
   creatorId: string;
   customIdFormat: string[];
+  creator: User;
 
   stringField1Name?: string | null;
   stringField1Active: boolean;

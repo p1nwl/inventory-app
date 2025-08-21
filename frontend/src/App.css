@@ -4,3 +4,30 @@
   padding: 2rem;
   text-align: center;
 }
+
+.buttonStyle {
+  padding: 10px 20px;
+  margin: 0 10px;
+  background: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.signOutStyle {
+  color: "red";
+  background: "none";
+  border: "none";
+  cursor: "pointer";
+}
+
+.navButtonStyle {
+  padding: "10px 15px";
+  margin: "0 10px 20px 0";
+  background: "#007bff";
+  color: "white";
+  border: "none";
+  border-radius: "4px";
+  cursor: "pointer";
+}
