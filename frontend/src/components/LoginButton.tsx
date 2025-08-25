@@ -1,10 +1,11 @@
+const AUTH_URL = import.meta.env.VITE_AUTH_URL;
 function LoginButton() {
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:3000/api/auth/google";
+    window.location.href = `${AUTH_URL}/api/auth/signin/google`;
   };
 
   const handleFacebookLogin = () => {
-    window.location.href = "http://localhost:3000/api/auth/facebook";
+    window.location.href = `${AUTH_URL}/api/auth/signin/facebook`;
   };
 
   return (

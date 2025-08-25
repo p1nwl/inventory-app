@@ -113,5 +113,10 @@ export default async function handler(req, res) {
         return process.env.FRONTEND_URL || baseUrl;
       },
     },
+    events: {
+      signOut: async () => {
+        console.log("User signed out");
+      },
+    },
   });
 }

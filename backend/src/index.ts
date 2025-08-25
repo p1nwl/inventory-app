@@ -5,10 +5,12 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const AUTH_URL = process.env.AUTH_URL || "http://localhost:3001";
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: `${FRONTEND_URL}`,
     credentials: true,
   })
 );
@@ -25,7 +27,7 @@ async function getSessionFromAuth(req: express.Request) {
   }
 
   try {
-    const sessionRes = await fetch("http://localhost:3001/api/auth/session", {
+    const sessionRes = await fetch(`${AUTH_URL}/api/auth/session`, {
       headers,
     });
 
@@ -105,7 +107,7 @@ app.post("/api/inventories", async (req, res) => {
       }
     }
 
-    const sessionRes = await fetch("http://localhost:3001/api/auth/session", {
+    const sessionRes = await fetch(`${AUTH_URL}/api/auth/session`, {
       headers,
     });
     const session = await sessionRes.json();
@@ -219,24 +221,48 @@ app.post("/api/items", async (req, res) => {
         bool1,
         bool2,
         bool3,
-        createdBy: session.user.id,
+        createdBy: { connect: { id: session.user.id } },
         version: 1,
       },
     });
 
     res.status(201).json(item);
-  } catch (e: any) {
-    console.error("Create item error:", e);
+  } catch (error: any) {
+    console.error("Create item error:", error);
     res.status(400).json({ error: "Invalid data" });
   }
+});
+
+app.get("/api/inventories/:id/items", async (req, res) => {
+  const { id } = req.params;
+  const session = await getSessionFromAuth(req);
+  if (!session?.user) return res.status(401).json({ error: "Unauthorized" });
+
+  const inventory = await prisma.inventory.findUnique({
+    where: { id },
+    include: {
+      items: true,
+      creator: true,
+      accessList: { where: { userId: session.user.id } },
+    },
+  });
+
+  if (!inventory) return res.status(404).json({ error: "Inventory not found" });
+
+  const hasAccess =
+    inventory.creatorId === session.user.id ||
+    inventory.accessList.length > 0 ||
+    inventory.isPublic;
+
+  if (!hasAccess) return res.status(403).json({ error: "Access denied" });
+
+  res.json(inventory.items);
 });
 
 app.get("/api/items/:id", async (req, res) => {
   const { id } = req.params;
   const session = await getSessionFromAuth(req);
-  if (!session?.user) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  if (!session?.user) return res.status(401).json({ error: "Unauthorized" });
 
   const item = await prisma.item.findUnique({
     where: { id },
@@ -253,9 +279,7 @@ app.get("/api/items/:id", async (req, res) => {
     },
   });
 
-  if (!item) {
-    return res.status(404).json({ error: "Item not found" });
-  }
+  if (!item) return res.status(404).json({ error: "Item not found" });
 
   const inv = item.inventory;
   const hasAccess =
@@ -263,9 +287,7 @@ app.get("/api/items/:id", async (req, res) => {
     inv.accessList.length > 0 ||
     inv.isPublic;
 
-  if (!hasAccess) {
-    return res.status(403).json({ error: "Access denied" });
-  }
+  if (!hasAccess) return res.status(403).json({ error: "Access denied" });
 
   res.json(item);
 });

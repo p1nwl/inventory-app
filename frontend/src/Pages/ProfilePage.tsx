@@ -6,6 +6,8 @@ interface ProfileData {
   accessibleInventories: Inventory[];
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function ProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -16,7 +18,7 @@ function ProfilePage() {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch("http://localhost:3000/api/profile", {
+      const res = await fetch(`${API_URL}/api/profile`, {
         credentials: "include",
       });
 
@@ -38,7 +40,7 @@ function ProfilePage() {
     if (!title) return;
 
     try {
-      const res = await fetch("http://localhost:3000/api/inventories", {
+      const res = await fetch(`${API_URL}/api/inventories`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -57,6 +59,8 @@ function ProfilePage() {
     } catch (error) {
       console.error("Error creating inventory:", error);
       alert("Network error. Please try again later.");
+    } finally {
+      fetchProfile();
     }
   };
 
