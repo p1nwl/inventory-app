@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { Item, Inventory } from "../types";
+import { useLocalStorageWithUser } from "../hooks/useLocalStorageWithUser";
+import { useAuth } from "../hooks/useAuth";
 
 interface InventoryEditorProps {
   inventoryId: string;
@@ -22,25 +24,35 @@ const InventoryEditor = ({
   const [latestData, setLatestData] = useState<Inventory | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [loadingItems, setLoadingItems] = useState<boolean>(true);
+  const { save } = useLocalStorageWithUser();
+  const { isLoading: authLoading } = useAuth();
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchInventory = async () => {
       try {
         const response = await fetch(
           `${API_URL}/api/inventories/${inventoryId}`,
           {
+            signal: controller.signal,
             credentials: "include",
           }
         );
         if (!response.ok) throw new Error("Failed to fetch");
         const inv: Inventory = await response.json();
-        setData(inv);
+
+        if (!controller.signal.aborted) {
+          setData(inv);
+        }
       } catch (err) {
         console.error("Error loading inventory:", err);
       }
     };
 
     fetchInventory();
+
+    return () => controller.abort();
   }, [inventoryId]);
 
   useEffect(() => {
@@ -83,11 +95,14 @@ const InventoryEditor = ({
   }, [data, inventoryId]);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchItems = async () => {
       try {
         const res = await fetch(
           `${API_URL}/api/inventories/${inventoryId}/items`,
           {
+            signal: controller.signal,
             credentials: "include",
           }
         );
@@ -102,12 +117,18 @@ const InventoryEditor = ({
       } catch (error) {
         console.error("Error fetching items:", error);
       } finally {
-        setLoadingItems(false);
+        if (!controller.signal.aborted) setLoadingItems(false);
       }
     };
 
     fetchItems();
+
+    return () => controller.abort();
   }, [inventoryId]);
+
+  if (authLoading) {
+    return <div className="p-5 text-center">Loading session...</div>;
+  }
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setData({ ...data, title: e.target.value });
@@ -155,28 +176,26 @@ const InventoryEditor = ({
 
       const newItem = await res.json();
       setItems((prev) => [newItem, ...prev]);
+      alert(`Item "${customId}" added successfully!`);
     } catch (error) {
-      console.error("Error adding item:", error);
+      if (error instanceof Error && error.name !== "AbortError") {
+        console.error("Error adding item:", error);
+        alert("Failed to add item. Please try again.");
+      }
     }
+  };
+
+  const handleItemClick = (id: string) => {
+    save("lastInventoryId", id);
   };
 
   if (isConflict) {
     return (
-      <div
-        style={{
-          background: "yellow",
-          padding: "20px",
-          margin: "10px 0",
-          borderRadius: "4px",
-        }}
-      >
+      <div className="bg-yellow-300 p-5 my-2.5 rounded-md">
         <p>
           Another user has modified this inventory. Version conflict detected.
         </p>
-        <button
-          onClick={resolveConflict}
-          style={{ padding: "8px 12px", cursor: "pointer" }}
-        >
+        <button onClick={resolveConflict} className="px-3 py-2 cursor-pointer">
           Merge changes
         </button>
       </div>
@@ -184,9 +203,9 @@ const InventoryEditor = ({
   }
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+    <div className="p-5 font-sans" style={{ fontFamily: "Arial, sans-serif" }}>
       <div>
-        <h2>Edit Inventory</h2>
+        <h2 className="text-xl font-semibold">Edit Inventory</h2>
         <div>
           <label>
             Title:
@@ -194,7 +213,7 @@ const InventoryEditor = ({
               type="text"
               value={data.title}
               onChange={handleTitleChange}
-              style={{ width: "100%", padding: "8px", margin: "4px 0" }}
+              className="w-full px-2 py-2 mt-1 mb-1 border border-gray-300 rounded"
             />
           </label>
         </div>
@@ -205,28 +224,22 @@ const InventoryEditor = ({
               value={data.description ?? ""}
               onChange={handleDescriptionChange}
               rows={4}
-              style={{ width: "100%", padding: "8px", margin: "4px 0" }}
+              className="w-full px-2 py-2 mt-1 mb-1 border border-gray-300 rounded"
             />
           </label>
         </div>
         <p>
-          <small>Current version: {data.version}</small>
+          <small className="text-gray-600">
+            Current version: {data.version}
+          </small>
         </p>
       </div>
 
-      <div style={{ marginTop: "40px" }}>
-        <h3>Items</h3>
+      <div className="mt-10">
+        <h3 className="text-lg font-medium">Items</h3>
         <button
           onClick={handleAddItem}
-          style={{
-            padding: "10px 20px",
-            background: "#28a745",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            marginBottom: "20px",
-          }}
+          className="px-5 py-2.5 bg-green-600 text-white border-none rounded cursor-pointer mb-5"
         >
           + Add Item
         </button>
@@ -234,26 +247,32 @@ const InventoryEditor = ({
         {loadingItems ? (
           <p>Loading items...</p>
         ) : (
-          <table border={1} cellPadding="10" style={{ width: "100%" }}>
+          <table className="w-full border-collapse mt-5 text-sm">
             <thead>
-              <tr>
-                <th>ID</th>
-                <th>Custom ID</th>
-                <th>String 1</th>
-                <th>Int 1</th>
-                <th>Bool 1</th>
-                <th>Version</th>
+              <tr className="bg-gray-700">
+                <th className="px-2.5 py-3 text-left">ID</th>
+                <th className="px-2.5 py-3 text-left">Custom ID</th>
+                <th className="px-2.5 py-3 text-left">String 1</th>
+                <th className="px-2.5 py-3 text-left">Int 1</th>
+                <th className="px-2.5 py-3 text-left">Bool 1</th>
+                <th className="px-2.5 py-3 text-left">Version</th>
               </tr>
             </thead>
             <tbody>
               {items.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.id}</td>
-                  <td>{item.customId}</td>
-                  <td>{item.string1 || "-"}</td>
-                  <td>{item.int1 || "-"}</td>
-                  <td>{item.bool1 ? "✅" : "❌"}</td>
-                  <td>{item.version}</td>
+                <tr
+                  key={item.id}
+                  onClick={() => handleItemClick(inventoryId)}
+                  className="cursor-pointer transition-colors duration-150 hover:bg-gray-50 hover:shadow-[inset_0_0_5px_rgba(0,0,0,0.1)]"
+                >
+                  <td className="px-2 py-1.5">{item.id.slice(0, 8)}...</td>
+                  <td className="px-2 py-1.5">{item.customId}</td>
+                  <td className="px-2 py-1.5">{item.string1 || "-"}</td>
+                  <td className="px-2 py-1.5">{item.int1 || "-"}</td>
+                  <td className="px-2 py-1.5 text-center">
+                    {item.bool1 ? "✅" : "❌"}
+                  </td>
+                  <td className="px-2 py-1.5">{item.version}</td>
                 </tr>
               ))}
             </tbody>

@@ -18,11 +18,11 @@ export interface User {
 export interface SessionUser {
   id: string;
   name?: string | null;
-  email: string;
+  email?: string;
   image?: string | null;
-  role: Role;
-  theme: Theme;
-  language: string;
+  role?: Role;
+  theme?: Theme;
+  language?: string;
 }
 
 export interface Session {

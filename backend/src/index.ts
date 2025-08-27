@@ -243,7 +243,10 @@ app.get("/api/inventories/:id/items", async (req, res) => {
     include: {
       items: true,
       creator: true,
-      accessList: { where: { userId: session.user.id } },
+      accessList: {
+        where: { userId: session.user.id },
+        select: { userId: true },
+      },
     },
   });
 
