@@ -56,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearUserStorage(session.user.id);
     }
   };
+  console.log("🔐 AuthProvider session:", session);
 
   useEffect(() => {
     refreshSession();
