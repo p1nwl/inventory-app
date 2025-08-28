@@ -1,4 +1,4 @@
-const AUTH_URL = import.meta.env.VITE_AUTH_URL;
+import { AUTH_URL } from "../types";
 
 function LoginButton() {
   const handleGoogleLogin = () => {

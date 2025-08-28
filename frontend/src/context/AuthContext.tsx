@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState, useCallback } from "react";
 import type { Session } from "../types";
 import { saveToStorage, clearUserStorage } from "../utils/storage";
+import { AUTH_URL } from "../types";
 
 const AuthContext = createContext<{
   session: Session | null;
@@ -17,7 +18,6 @@ const AuthContext = createContext<{
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const AUTH_URL = import.meta.env.VITE_AUTH_URL;
 
   const refreshSession = useCallback(async () => {
     try {
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  }, [AUTH_URL]);
+  }, []);
 
   const signOut = async () => {
     try {

@@ -1,5 +1,7 @@
 export type Role = "USER" | "ADMIN";
 export type Theme = "LIGHT" | "DARK";
+export const API_URL = import.meta.env.VITE_API_URL;
+export const AUTH_URL = import.meta.env.VITE_AUTH_URL;
 
 export interface User {
   id: string;
@@ -116,4 +118,9 @@ export interface InventoryStats {
   avgInt1?: number | null;
   avgInt2?: number | null;
   avgInt3?: number | null;
+}
+
+export interface ProfileData {
+  myInventories: Inventory[];
+  accessibleInventories: Inventory[];
 }

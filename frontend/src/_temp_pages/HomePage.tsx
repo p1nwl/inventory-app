@@ -1,59 +1,50 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Inventory } from "../types";
 import { useAuth } from "../hooks/useAuth";
 import { useLocalStorageWithUser } from "../hooks/useLocalStorageWithUser";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { useQuery } from "@tanstack/react-query";
+import { fetchInventories } from "../api/inventory";
 
 export default function HomePage() {
-  const { session, isLoading } = useAuth();
-  const [inventories, setInventories] = useState<Inventory[]>([]);
+  const { session, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { save, get } = useLocalStorageWithUser();
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchInventories = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/inventories`, {
-          signal: controller.signal,
-          credentials: "include",
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (!controller.signal.aborted) {
-            setInventories(data);
-          }
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          if (error.name !== "AbortError") {
-            console.error("Failed to fetch inventories", error);
-          } else {
-            console.log("Fetch aborted");
-          }
-        }
-      }
-    };
-    fetchInventories();
-
-    return () => controller.abort();
-  }, []);
+  const {
+    data: inventories = [],
+    isLoading: loadingInventories,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["inventories"],
+    queryFn: fetchInventories,
+    enabled: !!session,
+  });
 
   useEffect(() => {
-    if (session) {
-      const lastViewedId = get<string>("lastInventoryId", "");
-      if (lastViewedId) {
-        navigate(`/inventory/${lastViewedId}`);
-      }
+    if (session && !loadingInventories && inventories.length > 0) {
+      const lastViewedId = get<string>(
+        `lastInventoryId_${session.user.id}`,
+        ""
+      );
+      if (lastViewedId) navigate(`/inventory/${lastViewedId}`);
     }
-  }, [session, navigate, get]);
+  }, [session, navigate, get, loadingInventories, inventories]);
 
-  if (isLoading) {
+  if (authLoading || loadingInventories) {
     return <div className="p-5 text-center">Loading inventories...</div>;
+  }
+
+  if (error) {
+    console.error("Failed to load inventories:", error);
+    return (
+      <div className="p-5 text-red-600">
+        Failed to load inventories.{" "}
+        <button onClick={() => refetch()} className="text-blue-600 underline">
+          Try again
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -64,11 +55,11 @@ export default function HomePage() {
       ) : (
         <table className="w-full border-collapse mt-2.5">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="text-left p-2.5">Title</th>
-              <th className="text-left p-2.5">Description</th>
-              <th className="text-left p-2.5">Owner</th>
-              <th className="text-left p-2.5">Last Updated</th>
+            <tr className="bg-gray-700">
+              <th className="p-2.5">Title</th>
+              <th className="p-2.5">Description</th>
+              <th className="p-2.5">Owner</th>
+              <th className="p-2.5">Last Updated</th>
             </tr>
           </thead>
           <tbody>
@@ -81,7 +72,7 @@ export default function HomePage() {
                   }
                   navigate(`/inventory/${inv.id}`);
                 }}
-                className="cursor-pointer transition-colors duration-200 hover:bg-gray-50"
+                className="cursor-pointer transition-colors duration-200 hover:bg-gray-400"
               >
                 <td
                   className={`p-2.5 ${

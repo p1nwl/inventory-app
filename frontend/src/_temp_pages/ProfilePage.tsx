@@ -1,112 +1,67 @@
-import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import type { Inventory } from "../types";
 import { useAuth } from "../hooks/useAuth";
-
-interface ProfileData {
-  myInventories: Inventory[];
-  accessibleInventories: Inventory[];
-}
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ProfileData } from "../types";
+import { fetchProfile } from "../api/profile";
+import { createInventory } from "../api/inventory";
 
 function ProfilePage() {
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
   const { session, isLoading: authLoading } = useAuth();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const controller = new AbortController();
+  const {
+    data: profile,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery<ProfileData, Error>({
+    queryKey: ["profile"],
+    queryFn: fetchProfile,
+    enabled: !!session,
+  });
 
-    const fetchProfile = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/profile`, {
-          signal: controller.signal,
-          credentials: "include",
-        });
+  const createMutation = useMutation({
+    mutationFn: (title: string) => createInventory({ title, description: "" }),
+    onSuccess: (newInventory) => {
+      alert(`Inventory "${newInventory.title}" created!`);
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    },
+    onError: (error: Error) => {
+      alert(`Erorr: ${error.message}`);
+    },
+  });
 
-        if (res.ok) {
-          const data = await res.json();
-          if (!controller.signal.aborted) {
-            setProfile(data);
-          }
-        } else {
-          alert("Failed to load data. Please sign in again.");
-        }
-      } catch (error) {
-        console.error("Error loading profile:", error);
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchProfile();
-
-    return () => controller.abort();
-  }, []);
+  const handleCreateInventory = () => {
+    const title = prompt("Enter inventory title");
+    if (title && title.trim()) {
+      createMutation.mutate(title.trim());
+    }
+  };
 
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div key="loading" className="text-lg text-gray-600">
-          Checking session...
-        </div>
+        <div className="text-lg text-gray-600">Checking session...</div>
       </div>
     );
   }
+
   if (!session) return <Navigate to="/login" />;
 
-  const handleCreateInventory = async () => {
-    const title = prompt("Enter inventory title:");
-    if (!title || title.trim() === "") return;
+  if (isLoading)
+    return <div className="p-5 text-center">Loading profile...</div>;
 
-    try {
-      const res = await fetch(`${API_URL}/api/inventories`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ title: title.trim() }),
-      });
+  if (error) {
+    return (
+      <div className="p-5 text-red-600">
+        Failed to load data.{" "}
+        <button onClick={() => refetch()} className="text-blue-600 underline">
+          Try again
+        </button>
+      </div>
+    );
+  }
 
-      if (res.ok) {
-        const newInventory = await res.json();
-        alert(`Inventory "${newInventory.title}" created!`);
-      } else {
-        const error = await res.text();
-        alert(`Error: ${error}`);
-      }
-    } catch (error) {
-      console.error("Error creating inventory:", error);
-      alert("Network error. Please try again later.");
-    } finally {
-      const controller = new AbortController();
-
-      try {
-        const res = await fetch(`${API_URL}/api/profile`, {
-          signal: controller.signal,
-          credentials: "include",
-        });
-        if (res.ok && !controller.signal.aborted) {
-          const data = await res.json();
-          setProfile(data);
-        }
-      } catch (error) {
-        if (error instanceof Error && error.name !== "AbortError") {
-          console.error("Error refreshing profile:", error);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    }
-  };
-
-  if (loading) return <div className="p-5 text-center">Loading...</div>;
   if (!profile) return <div className="p-5">No profile data.</div>;
 
   return (
@@ -127,7 +82,7 @@ function ProfilePage() {
       ) : (
         <table className="w-full border-collapse border border-gray-300 mb-8">
           <thead>
-            <tr className="bg-gray-100">
+            <tr className="bg-gray-700">
               <th className="border border-gray-300 px-4 py-2 text-left">ID</th>
               <th className="border border-gray-300 px-4 py-2 text-left">
                 Title
@@ -142,7 +97,7 @@ function ProfilePage() {
           </thead>
           <tbody>
             {profile.myInventories.map((inv) => (
-              <tr key={inv.id} className="hover:bg-gray-50">
+              <tr key={inv.id} className="hover:bg-gray-500">
                 <td className="border border-gray-300 px-4 py-2">{inv.id}</td>
                 <td className="border border-gray-300 px-4 py-2">
                   {inv.title}
@@ -180,7 +135,7 @@ function ProfilePage() {
           </thead>
           <tbody>
             {profile.accessibleInventories.map((inv) => (
-              <tr key={inv.id} className="hover:bg-gray-50">
+              <tr key={inv.id} className="hover:bg-gray-500">
                 <td className="border border-gray-300 px-4 py-2">{inv.id}</td>
                 <td className="border border-gray-300 px-4 py-2">
                   {inv.title}
