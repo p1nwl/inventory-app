@@ -34,19 +34,12 @@ const cors = Cors({
   origin: process.env.FRONTEND_URL,
   credentials: true,
 });
-console.log("✅ PrismaAdapter:", PrismaAdapter(prisma));
-console.log(
-  "🔐 NEXTAUTH_SECRET:",
-  process.env.NEXTAUTH_SECRET ? "✅ Set" : "❌ Not set"
-);
 
 const adapter = PrismaAdapter(prisma);
 
 const originalGetUserByAccount = adapter.getUserByAccount;
 adapter.getUserByAccount = async (account) => {
-  console.log("🔍 getUserByAccount called with:", account);
   const result = await originalGetUserByAccount(account);
-  console.log("🔍 getUserByAccount result:", result);
   return result;
 };
 
@@ -68,7 +61,6 @@ export default async function handler(req, res) {
     const account = await prisma.account.findFirst({
       where: { provider: "google" },
     });
-    console.log("🔍 Found account:", account);
     return res.json({ account });
   }
 
@@ -100,7 +92,6 @@ export default async function handler(req, res) {
         return token;
       },
       async session({ session, token }: { session: any; token: any }) {
-        console.log("🔑 Session callback:", { session, token });
         if (token) {
           session.user.id = token.id;
           session.user.role = token.role || "USER";
