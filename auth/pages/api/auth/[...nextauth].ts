@@ -81,6 +81,44 @@ export default async function handler(req, res) {
       strategy: "jwt",
       maxAge: 30 * 24 * 60 * 60,
     },
+    cookies: {
+      sessionToken: {
+        name: "next-auth.session-token",
+        options: {
+          httpOnly: true,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+        },
+      },
+      csrfToken: {
+        name: "next-auth.csrf-token",
+        options: {
+          httpOnly: true,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+        },
+      },
+      callbackUrl: {
+        name: "next-auth.callback-url",
+        options: {
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          path: "/",
+          secure: process.env.NODE_ENV === "production",
+        },
+      },
+      state: {
+        name: "next-auth.state",
+        options: {
+          httpOnly: true,
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          secure: process.env.NODE_ENV === "production",
+          path: "/",
+          maxAge: 900,
+        },
+      },
+    },
     callbacks: {
       async jwt({ token, user }) {
         if (user) {

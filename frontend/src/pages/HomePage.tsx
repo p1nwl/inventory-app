@@ -1,37 +1,34 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useLocalStorageWithUser } from "../hooks/useLocalStorageWithUser";
 import { useQuery } from "@tanstack/react-query";
 import { fetchInventories } from "../api/inventory";
+import { canViewInventory } from "../utils/permissions";
+import type { User, Inventory } from "../utils/permissions";
 
 export default function HomePage() {
-  const { session, isLoading: authLoading } = useAuth();
+  const { session } = useAuth();
   const navigate = useNavigate();
   const { save, get } = useLocalStorageWithUser();
+  const user: User | null = session
+    ? { id: session.user.id, role: session.user.role }
+    : null;
 
   const {
     data: inventories = [],
-    isLoading: loadingInventories,
+    isLoading,
     error,
     refetch,
   } = useQuery({
     queryKey: ["inventories"],
     queryFn: fetchInventories,
-    enabled: !!session,
   });
 
-  useEffect(() => {
-    if (session && !loadingInventories && inventories.length > 0) {
-      const lastViewedId = get<string>(
-        `lastInventoryId_${session.user.id}`,
-        ""
-      );
-      if (lastViewedId) navigate(`/inventory/${lastViewedId}`);
-    }
-  }, [session, navigate, get, loadingInventories, inventories]);
+  const visibleInventories = inventories.filter((inv: Inventory) =>
+    canViewInventory(user, inv)
+  );
 
-  if (authLoading || loadingInventories) {
+  if (isLoading) {
     return <div className="p-5 text-center">Loading inventories...</div>;
   }
 
@@ -49,9 +46,9 @@ export default function HomePage() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold">Your Inventories</h2>
-      {inventories.length === 0 ? (
-        <p>No inventories yet. Create one in your profile.</p>
+      <h2 className="text-xl font-semibold">All Inventories</h2>
+      {visibleInventories.length === 0 ? (
+        <p>No inventories yet.</p>
       ) : (
         <table className="w-full border-collapse mt-2.5">
           <thead>
@@ -63,7 +60,7 @@ export default function HomePage() {
             </tr>
           </thead>
           <tbody>
-            {inventories.map((inv) => (
+            {visibleInventories.map((inv) => (
               <tr
                 key={inv.id}
                 onClick={() => {

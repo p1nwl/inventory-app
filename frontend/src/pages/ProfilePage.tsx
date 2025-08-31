@@ -1,13 +1,16 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ProfileData } from "../types";
 import { fetchProfile } from "../api/profile";
 import { createInventory } from "../api/inventory";
+import { useLocalStorageWithUser } from "../hooks/useLocalStorageWithUser";
 
 function ProfilePage() {
   const { session, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { save } = useLocalStorageWithUser();
 
   const {
     data: profile,
@@ -97,7 +100,16 @@ function ProfilePage() {
           </thead>
           <tbody>
             {profile.myInventories.map((inv) => (
-              <tr key={inv.id} className="hover:bg-gray-500">
+              <tr
+                onClick={() => {
+                  if (session) {
+                    save(`lastInventoryId_${session.user.id}`, inv.id);
+                  }
+                  navigate(`/inventory/${inv.id}`);
+                }}
+                key={inv.id}
+                className="hover:bg-gray-500"
+              >
                 <td className="border border-gray-300 px-4 py-2">{inv.id}</td>
                 <td className="border border-gray-300 px-4 py-2">
                   {inv.title}
