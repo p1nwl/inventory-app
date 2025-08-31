@@ -32,6 +32,12 @@ export interface Session {
   expires: string;
 }
 
+export type Permissions = {
+  canView: boolean;
+  canEdit: boolean;
+  canEditItems: boolean;
+};
+
 export interface Inventory {
   id: string;
   title: string;
@@ -67,6 +73,8 @@ export interface Inventory {
   boolField2Active: boolean;
   boolField3Name?: string | null;
   boolField3Active: boolean;
+
+  permissions: Permissions;
 }
 
 export interface Item {

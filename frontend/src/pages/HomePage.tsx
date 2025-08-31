@@ -3,16 +3,11 @@ import { useAuth } from "../hooks/useAuth";
 import { useLocalStorageWithUser } from "../hooks/useLocalStorageWithUser";
 import { useQuery } from "@tanstack/react-query";
 import { fetchInventories } from "../api/inventory";
-import { canViewInventory } from "../utils/permissions";
-import type { User, Inventory } from "../utils/permissions";
 
 export default function HomePage() {
   const { session } = useAuth();
   const navigate = useNavigate();
   const { save, get } = useLocalStorageWithUser();
-  const user: User | null = session
-    ? { id: session.user.id, role: session.user.role }
-    : null;
 
   const {
     data: inventories = [],
@@ -23,10 +18,6 @@ export default function HomePage() {
     queryKey: ["inventories"],
     queryFn: fetchInventories,
   });
-
-  const visibleInventories = inventories.filter((inv: Inventory) =>
-    canViewInventory(user, inv)
-  );
 
   if (isLoading) {
     return <div className="p-5 text-center">Loading inventories...</div>;
@@ -43,6 +34,10 @@ export default function HomePage() {
       </div>
     );
   }
+
+  const visibleInventories = inventories.filter(
+    (inv) => inv.permissions.canView
+  );
 
   return (
     <div>

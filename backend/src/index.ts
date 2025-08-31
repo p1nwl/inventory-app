@@ -28,6 +28,7 @@ app.use(
   cors({
     origin: `${FRONTEND_URL}`,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
 app.use(express.json());
@@ -85,15 +86,18 @@ app.get("/api/inventories", authenticate, async (req, res) => {
       },
     });
 
-    console.log("USER IN /inventories:", user);
-    const accessible = inventories.filter((inv) => canViewInventory(user, inv));
-    console.log("ALL INVENTORIES:", inventories.length);
-    console.log(
-      "ACCESSIBLE:",
-      accessible.length,
-      accessible.map((i) => i.id)
-    );
-    res.json(accessible);
+    const result = inventories
+      .filter((inv) => canViewInventory(user, inv))
+      .map((inv) => ({
+        ...inv,
+        permissions: {
+          canView: true, // раз попал в filter
+          canEdit: canEdit(user, inv),
+          canEditItems: canEditItems(user, inv),
+        },
+      }));
+
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: "Database error" });
   }
@@ -141,12 +145,17 @@ app.get("/api/inventories/:id", authenticate, async (req, res) => {
     });
 
     if (!inventory) return res.status(404).json({ error: "Not found" });
-
-    if (!canViewInventory(user, inventory)) {
+    if (!canViewInventory(user, inventory))
       return res.status(403).json({ error: "Access denied" });
-    }
 
-    res.json(inventory);
+    res.json({
+      ...inventory,
+      permissions: {
+        canView: true,
+        canEdit: canEdit(user, inventory),
+        canEditItems: canEditItems(user, inventory),
+      },
+    });
   } catch (error) {
     res.status(500).json({ error: "Database error" });
   }
@@ -165,13 +174,9 @@ app.post("/api/inventories/:id/items", authenticate, async (req, res) => {
     },
   });
 
-  if (!inventory) {
-    return res.status(404).json({ error: "Inventory not found" });
-  }
-
-  if (!canEditItems(user, inventory)) {
+  if (!inventory) return res.status(404).json({ error: "Inventory not found" });
+  if (!canEditItems(user, inventory))
     return res.status(403).json({ error: "Access denied" });
-  }
 
   try {
     const item = await prisma.item.create({
@@ -217,7 +222,14 @@ app.get("/api/inventories/:id/items", authenticate, async (req, res) => {
   if (!canViewInventory(user, inventory))
     return res.status(403).json({ error: "Access denied" });
 
-  res.json(inventory.items);
+  res.json({
+    items: inventory.items,
+    permissions: {
+      canView: true,
+      canEdit: canEdit(user, inventory),
+      canEditItems: canEditItems(user, inventory),
+    },
+  });
 });
 
 app.get("/api/items/:id", authenticate, async (req, res) => {
@@ -241,7 +253,14 @@ app.get("/api/items/:id", authenticate, async (req, res) => {
   if (!canViewInventory(user, item.inventory))
     return res.status(403).json({ error: "Access denied" });
 
-  res.json(item);
+  res.json({
+    ...item,
+    permissions: {
+      canView: true,
+      canEdit: canEdit(user, item.inventory),
+      canEditItems: canEditItems(user, item.inventory),
+    },
+  });
 });
 
 // --- Profile ---

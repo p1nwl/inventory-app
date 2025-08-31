@@ -17,7 +17,9 @@ export const authenticate = async (
     const sessionRes = await fetch(
       `${process.env.AUTH_URL || "http://localhost:3001"}/api/auth/session`,
       {
-        headers,
+        headers: {
+          cookie: req.headers.cookie || "",
+        },
       }
     );
 
