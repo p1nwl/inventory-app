@@ -17,6 +17,7 @@ export default function HomePage() {
   } = useQuery({
     queryKey: ["inventories"],
     queryFn: fetchInventories,
+    refetchOnMount: "always",
   });
 
   if (isLoading) {

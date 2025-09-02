@@ -1,17 +1,21 @@
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-    "target": "ES2023",
-    "lib": ["ES2023"],
-    "module": "ESNext",
+    "target": "ES2022",
+    "lib": ["ES2022"],
     "skipLibCheck": true,
 
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
-    "moduleDetection": "force",
-    "noEmit": true,
+    /* ESM под Node */
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    /* Генерация типов */
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationDir": "types",
+
+    "composite": true,
+    "noEmit": false,
 
     /* Linting */
     "strict": true,

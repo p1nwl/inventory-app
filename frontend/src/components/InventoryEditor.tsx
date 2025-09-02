@@ -1,11 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import type { Inventory } from "../types";
 import { useLocalStorageWithUser } from "../hooks/useLocalStorageWithUser";
 import { useAuth } from "../hooks/useAuth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchInventory, updateInventory } from "../api/inventory";
 import { useQuery } from "@tanstack/react-query";
-import { addItem, fetchItems } from "../api/items";
+import { addItem, fetchItems, updateItem } from "../api/items";
+import { EditableHeader } from "./EditableHeader";
+import type { Item } from "../types";
+import { ItemModal } from "./ItemModal";
 
 interface InventoryEditorProps {
   inventoryId: string;
@@ -24,9 +27,11 @@ const InventoryEditor = ({
     id: inventoryId,
     title: "",
     description: "",
-    version: 1,
     updatedAt: "",
   });
+  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+
+  const isEditingRef = useRef(false);
 
   const {
     data: inventory,
@@ -38,24 +43,28 @@ const InventoryEditor = ({
     enabled: !!inventoryId,
   });
 
-  const {
-    data: items = [],
-    isLoading: loadingItems,
-    error: itemsError,
-  } = useQuery({
+  const { data: items = [], error: itemsError } = useQuery({
     queryKey: ["items", inventoryId],
     queryFn: () => fetchItems(inventoryId),
     enabled: !!inventoryId,
   });
 
-  const updateMutation = useMutation({
-    mutationFn: (data: Partial<Inventory>) =>
-      updateInventory(inventoryId, data),
+  const updateInventoryMutation = useMutation({
+    mutationFn: (data: Partial<Inventory>) => {
+      return updateInventory(inventoryId, data);
+    },
     onSuccess: (updated) => {
       queryClient.setQueryData(["inventory", inventoryId], updated);
-      setData(updated);
+      setData((prev) => ({
+        ...prev,
+        ...updated,
+        title: prev.title,
+        description: prev.description,
+        permissions: prev.permissions ?? updated.permissions,
+      }));
     },
     onError: (error: { message?: string; response?: { data: Inventory } }) => {
+      console.error("[InventoryEditor] update error:", error);
       if (error.message?.includes("409")) {
         setIsConflict(true);
         setLatestData(error.response?.data || null);
@@ -65,11 +74,34 @@ const InventoryEditor = ({
     },
   });
 
+  const updateItemMutation = useMutation({
+    mutationFn: ({
+      inventoryId,
+      itemId,
+      data,
+    }: {
+      inventoryId: string;
+      itemId: string;
+      data: Partial<Item>;
+    }) => {
+      return updateItem(inventoryId, itemId, data);
+    },
+    onSuccess: (updatedItem) => {
+      queryClient.setQueryData(["items", inventoryId], (old: Item[] = []) =>
+        old.map((item) => (item.id === updatedItem.id ? updatedItem : item))
+      );
+    },
+    onError: () => {
+      alert("Failed to save item. Please try again.");
+    },
+  });
+
   const addMutation = useMutation({
     mutationFn: ({ customId }: { customId: string }) =>
       addItem({ inventoryId, customId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["items", inventoryId] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
     onError: () => {
       alert("Failed to add item. Please try again.");
@@ -78,31 +110,30 @@ const InventoryEditor = ({
 
   useEffect(() => {
     if (inventory) {
-      setData(inventory);
+      setData((prev) => {
+        return {
+          ...inventory,
+          title: prev.title || inventory.title,
+          description: prev.description || inventory.description,
+          permissions: inventory.permissions,
+          version: inventory.version,
+        };
+      });
     }
   }, [inventory]);
 
-  useEffect(() => {
-    if (!data || !inventory) return;
+  const canEdit = !!inventory?.permissions?.canEdit;
+  const canEditItems = !!inventory?.permissions?.canEditItems;
 
-    const timer = setTimeout(() => {
-      if (data.version === inventory.version) {
-        updateMutation.mutate(data);
+  useEffect(() => {
+    if (!canEdit) return;
+    const interval = setInterval(() => {
+      if (!isEditingRef.current && data?.id) {
+        updateInventoryMutation.mutate(data);
       }
     }, 8000);
-
-    return () => clearTimeout(timer);
-  }, [data, inventory, updateMutation, inventoryId]);
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setData({ ...data, title: e.target.value });
-  };
-
-  const handleDescriptionChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    setData({ ...data, description: e.target.value });
-  };
+    return () => clearInterval(interval);
+  }, [data, canEdit, updateInventoryMutation]);
 
   const resolveConflict = () => {
     if (!latestData) return;
@@ -123,8 +154,17 @@ const InventoryEditor = ({
     }
   };
 
-  const handleItemClick = () => {
+  const handleItemClick = (item: Item) => {
     save("lastInventoryId", inventoryId);
+    setSelectedItem(item);
+  };
+
+  const handleItemSave = (updatedData: Partial<Item>) => {
+    updateItemMutation.mutate({
+      inventoryId,
+      itemId: selectedItem!.id,
+      data: updatedData,
+    });
   };
 
   if (authLoading || loadingInventory) {
@@ -153,82 +193,72 @@ const InventoryEditor = ({
   }
 
   return (
-    <div className="p-5 font-sans" style={{ fontFamily: "Arial, sans-serif" }}>
-      <div>
-        <h2 className="text-xl font-semibold">Edit Inventory</h2>
-        <div>
-          <label>
-            Title:
-            <input
-              type="text"
-              value={data.title}
-              onChange={handleTitleChange}
-              className="w-full px-2 py-2 mt-1 mb-1 border border-gray-300 rounded"
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Description:
-            <textarea
-              value={data.description ?? ""}
-              onChange={handleDescriptionChange}
-              rows={4}
-              className="w-full px-2 py-2 mt-1 mb-1 border border-gray-300 rounded"
-            />
-          </label>
-        </div>
-        <p>
-          <small className="text-gray-600">
-            Current version: {data.version}
-          </small>
-        </p>
-      </div>
+    <div className="p-5 font-sans max-w-4xl mx-auto">
+      <EditableHeader
+        title={data.title || ""}
+        description={data.description ?? ""}
+        canEdit={canEdit}
+        onSave={({ title, description }) => {
+          const newData = { ...data, title, description };
+          setData(newData);
+          updateInventoryMutation.mutate(newData);
+        }}
+        onEditingChange={(editing) => (isEditingRef.current = editing)}
+      />
 
-      <div className="mt-10">
-        <h3 className="text-lg font-medium">Items</h3>
-        <button
-          onClick={handleAddItem}
-          disabled={addMutation.isPending}
-          className="px-5 py-2.5 bg-green-600 text-white border-none rounded cursor-pointer mb-5 disabled:opacity-50"
-        >
-          {addMutation.isPending ? "Adding..." : "+ Add Item"}
-        </button>
+      <p className="text-sm text-gray-500 mb-6">Version: {data.version}</p>
 
-        {loadingItems ? (
-          <p>Loading items...</p>
-        ) : (
-          <table className="w-full border-collapse mt-5 text-sm">
-            <thead>
-              <tr className="bg-gray-700">
-                <th className="px-2.5 py-3">ID</th>
-                <th className="px-2.5 py-3">Custom ID</th>
-                <th className="px-2.5 py-3">String 1</th>
-                <th className="px-2.5 py-3">Int 1</th>
-                <th className="px-2.5 py-3">Bool 1</th>
-                <th className="px-2.5 py-3">Version</th>
+      <div className="mt-8">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium">Items</h3>
+          {canEditItems && (
+            <button
+              onClick={handleAddItem}
+              disabled={addMutation.isPending}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-70"
+            >
+              {addMutation.isPending ? "Adding..." : "+ Add Item"}
+            </button>
+          )}
+        </div>
+
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="bg-gray-500">
+              <th className="px-3 py-2">ID</th>
+              <th className="px-3 py-2">Custom ID</th>
+              <th className="px-3 py-2">String 1</th>
+              <th className="px-3 py-2">Int 1</th>
+              <th className="px-3 py-2">Bool 1</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <tr
+                key={item.id}
+                onClick={() => handleItemClick(item)}
+                className="hover:bg-gray-600 cursor-pointer"
+              >
+                <td className="px-3 py-2 text-xs text-gray-500">
+                  {item.id.slice(0, 8)}...
+                </td>
+                <td className="px-3 py-2">{item.customId}</td>
+                <td className="px-3 py-2">{item.string1 || "-"}</td>
+                <td className="px-3 py-2">{item.int1 || "-"}</td>
+                <td className="px-3 py-2 text-center">
+                  {item.bool1 ? "✅" : "❌"}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr
-                  key={item.id}
-                  onClick={() => handleItemClick}
-                  className="cursor-pointer transition-colors duration-150 hover:bg-gray-500 hover:shadow-[inset_0_0_5px_rgba(0,0,0,0.1)]"
-                >
-                  <td className="px-2 py-1.5">{item.id.slice(0, 8)}...</td>
-                  <td className="px-2 py-1.5">{item.customId}</td>
-                  <td className="px-2 py-1.5">{item.string1 || "-"}</td>
-                  <td className="px-2 py-1.5">{item.int1 || "-"}</td>
-                  <td className="px-2 py-1.5 text-center">
-                    {item.bool1 ? "✅" : "❌"}
-                  </td>
-                  <td className="px-2 py-1.5">{item.version}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+            ))}
+          </tbody>
+        </table>
+        <ItemModal
+          item={selectedItem || ({} as Item)}
+          isOpen={!!selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onSave={handleItemSave}
+          canEdit={canEditItems}
+        />
       </div>
     </div>
   );

@@ -83,6 +83,7 @@ export interface Item {
   customId: string;
   version: number;
   createdAt: string;
+  updatedAt: string;
   createdById: string;
 
   string1?: string | null;
@@ -94,6 +95,15 @@ export interface Item {
   bool1?: boolean | null;
   bool2?: boolean | null;
   bool3?: boolean | null;
+}
+
+export interface ItemsResponse {
+  items: Item[];
+  permissions: {
+    canView: boolean;
+    canEdit: boolean;
+    canEditItems: boolean;
+  };
 }
 
 export interface InventoryUserAccess {
@@ -132,3 +142,18 @@ export interface ProfileData {
   myInventories: Inventory[];
   accessibleInventories: Inventory[];
 }
+
+import { z } from "zod";
+
+export const formSchema = z.object({
+  customId: z.string().min(1, "Custom ID обязателен"),
+  string1: z.string().optional(),
+  int1: z
+    .union([z.number(), z.nan()])
+    .transform((val) => (isNaN(val) ? null : val))
+    .nullable()
+    .optional(),
+  bool1: z.boolean().optional(),
+});
+
+export type ItemFormValues = z.infer<typeof formSchema>;

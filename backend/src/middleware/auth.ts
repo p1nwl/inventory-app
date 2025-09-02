@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+
 export const authenticate = async (
   req: Request,
   res: Response,
@@ -14,42 +15,26 @@ export const authenticate = async (
       }
     }
 
-    const sessionRes = await fetch(
-      `${process.env.AUTH_URL || "http://localhost:3001"}/api/auth/session`,
-      {
-        headers: {
-          cookie: req.headers.cookie || "",
-        },
-      }
-    );
+    const sessionRes = await fetch(`${process.env.AUTH_URL}/api/auth/session`, {
+      headers,
+    });
 
     if (sessionRes.ok) {
       const session = await sessionRes.json();
       if (session?.user) {
         req.user = {
-          ...session.user,
           id: session.user.id,
+          name: session.user.name,
+          email: session.user.email,
           role: session.user.role || "USER",
+          theme: session.user.theme || "LIGHT",
+          language: session.user.language || "en",
         };
-      } else {
-        req.user = makeGuestUser();
       }
-    } else {
-      req.user = makeGuestUser();
     }
   } catch (err) {
     console.error("Auth check failed:", err);
-    req.user = makeGuestUser();
   }
 
   next();
 };
-
-function makeGuestUser() {
-  return {
-    id: "guest",
-    name: "Guest",
-    email: "guest@example.com",
-    role: "GUEST",
-  };
-}

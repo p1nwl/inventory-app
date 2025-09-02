@@ -3,26 +3,12 @@ import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 import { authenticate } from "./middleware/auth";
 import { canViewInventory, canEdit, canEditItems } from "./utils/permissions";
+import type { User } from "./types";
 
 const prisma = new PrismaClient();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
-
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        name: string;
-        email: string;
-        role?: string;
-        theme?: string;
-        language?: string;
-      };
-    }
-  }
-}
 
 app.use(
   cors({
@@ -33,48 +19,6 @@ app.use(
 );
 app.use(express.json());
 
-// --- Users ---
-app.post("/api/users", async (req, res) => {
-  const { email, name } = req.body;
-  try {
-    const user = await prisma.user.create({
-      data: {
-        email: email.toLowerCase(),
-        name,
-        role: "USER",
-        language: "en",
-        theme: "LIGHT",
-      },
-    });
-    res.status(201).json(user);
-  } catch (e: any) {
-    if (e.code === "P2002") {
-      res.status(409).json({ error: "User with this email already exists" });
-    } else {
-      res.status(400).json({ error: "Invalid data" });
-    }
-  }
-});
-
-app.get("/api/users/by-email", async (req, res) => {
-  const { email } = req.query;
-  if (!email || typeof email !== "string") {
-    return res.status(400).json({ error: "Email is required" });
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { email: email.trim().toLowerCase() },
-    select: { id: true, name: true, email: true },
-  });
-
-  if (!user) {
-    return res.status(404).json({ error: "User not found" });
-  }
-
-  res.json(user);
-});
-
-// --- Inventories ---
 app.get("/api/inventories", authenticate, async (req, res) => {
   const user = req.user ? { id: req.user.id, role: req.user.role } : null;
 
@@ -91,7 +35,7 @@ app.get("/api/inventories", authenticate, async (req, res) => {
       .map((inv) => ({
         ...inv,
         permissions: {
-          canView: true, // раз попал в filter
+          canView: true,
           canEdit: canEdit(user, inv),
           canEditItems: canEditItems(user, inv),
         },
@@ -124,7 +68,14 @@ app.post("/api/inventories", authenticate, async (req, res) => {
       },
     });
 
-    res.status(201).json(inventory);
+    res.status(201).json({
+      ...inventory,
+      permissions: {
+        canView: true,
+        canEdit: true,
+        canEditItems: true,
+      },
+    });
   } catch (e: any) {
     console.error("Create inventory error:", e);
     res.status(400).json({ error: "Invalid data" });
@@ -161,7 +112,6 @@ app.get("/api/inventories/:id", authenticate, async (req, res) => {
   }
 });
 
-// --- Items ---
 app.post("/api/inventories/:id/items", authenticate, async (req, res) => {
   const { id: inventoryId } = req.params;
   const user = req.user ? { id: req.user.id, role: req.user.role } : null;
@@ -232,6 +182,43 @@ app.get("/api/inventories/:id/items", authenticate, async (req, res) => {
   });
 });
 
+app.put(
+  "/api/inventories/:id/items/:itemId",
+  authenticate,
+  async (req, res) => {
+    const { id: inventoryId, itemId } = req.params;
+    const user = req.user ? { id: req.user.id, role: req.user.role } : null;
+
+    const inventory = await prisma.inventory.findUnique({
+      where: { id: inventoryId },
+      include: { accessList: true },
+    });
+
+    if (!inventory)
+      return res.status(404).json({ error: "Inventory not found" });
+    if (!canEditItems(user, inventory))
+      return res.status(403).json({ error: "Access denied" });
+
+    try {
+      const item = await prisma.item.update({
+        where: { id: itemId },
+        data: {
+          customId: req.body.customId,
+          string1: req.body.string1,
+          int1: req.body.int1,
+          bool1: req.body.bool1,
+          version: { increment: 1 },
+        },
+      });
+
+      res.json(item);
+    } catch (error: any) {
+      console.error("Update item error:", error);
+      res.status(400).json({ error: "Invalid data" });
+    }
+  }
+);
+
 app.get("/api/items/:id", authenticate, async (req, res) => {
   const { id } = req.params;
   const user = req.user ? { id: req.user.id, role: req.user.role } : null;
@@ -263,14 +250,13 @@ app.get("/api/items/:id", authenticate, async (req, res) => {
   });
 });
 
-// --- Profile ---
 app.get("/api/profile", authenticate, async (req, res) => {
   try {
     const userId = req.user!.id;
 
     const myInventories = await prisma.inventory.findMany({
       where: { creatorId: userId },
-      include: { creator: true },
+      include: { creator: true, accessList: true },
       orderBy: { updatedAt: "desc" },
     });
 
@@ -280,21 +266,36 @@ app.get("/api/profile", authenticate, async (req, res) => {
           some: { userId },
         },
       },
-      include: { creator: true },
+      include: { creator: true, accessList: true },
       orderBy: { updatedAt: "desc" },
     });
 
-    res.json({
-      myInventories,
-      accessibleInventories,
-    });
+    const profileData = {
+      myInventories: myInventories.map((inv) => ({
+        ...inv,
+        permissions: {
+          canView: true,
+          canEdit: canEdit({ id: userId, role: req.user!.role }, inv),
+          canEditItems: canEditItems({ id: userId, role: req.user!.role }, inv),
+        },
+      })),
+      accessibleInventories: accessibleInventories.map((inv) => ({
+        ...inv,
+        permissions: {
+          canView: true,
+          canEdit: canEdit({ id: userId, role: req.user!.role }, inv),
+          canEditItems: canEditItems({ id: userId, role: req.user!.role }, inv),
+        },
+      })),
+    };
+
+    res.json(profileData);
   } catch (error) {
     console.error("Fetch profile error:", error);
     res.status(500).json({ error: "Database error" });
   }
 });
 
-// --- Update Inventory ---
 app.put("/api/inventories/:id", authenticate, async (req, res) => {
   const { id } = req.params;
   const user = req.user ? { id: req.user.id, role: req.user.role } : null;
@@ -333,9 +334,19 @@ app.put("/api/inventories/:id", authenticate, async (req, res) => {
         customIdFormat: req.body.customIdFormat,
         version: req.body.version + 1,
       },
+      include: {
+        accessList: true,
+      },
     });
 
-    res.json(updated);
+    res.json({
+      ...updated,
+      permissions: {
+        canView: true,
+        canEdit: canEdit(user, updated),
+        canEditItems: canEditItems(user, updated),
+      },
+    });
   } catch (error: any) {
     if (error.code === "P2025") {
       return res.status(409).json({
@@ -347,6 +358,36 @@ app.put("/api/inventories/:id", authenticate, async (req, res) => {
     res.status(400).json({ error: "Invalid data" });
   }
 });
+
+app.delete(
+  "/api/inventories/:id/items/:itemId",
+  authenticate,
+  async (req, res) => {
+    const { id: inventoryId, itemId } = req.params;
+    const user = req.user ? { id: req.user.id, role: req.user.role } : null;
+
+    const inventory = await prisma.inventory.findUnique({
+      where: { id: inventoryId },
+      include: { accessList: true },
+    });
+
+    if (!inventory)
+      return res.status(404).json({ error: "Inventory not found" });
+    if (!canEditItems(user, inventory))
+      return res.status(403).json({ error: "Access denied" });
+
+    try {
+      await prisma.item.delete({
+        where: { id: itemId },
+      });
+
+      res.status(204).send();
+    } catch (error: any) {
+      console.error("Delete item error:", error);
+      res.status(400).json({ error: "Invalid data" });
+    }
+  }
+);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

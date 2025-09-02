@@ -120,6 +120,26 @@ export default async function handler(req, res) {
       },
     },
     callbacks: {
+      async signIn({ user }) {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email! },
+        });
+
+        if (!existingUser) {
+          await prisma.user.create({
+            data: {
+              id: user.id,
+              email: user.email!,
+              name: user.name || "Anonymous",
+              role: "USER",
+              language: "en",
+              theme: "LIGHT",
+            },
+          });
+        }
+
+        return true;
+      },
       async jwt({ token, user }) {
         if (user) {
           token.id = user.id;

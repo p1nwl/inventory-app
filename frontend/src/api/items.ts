@@ -11,7 +11,8 @@ export const fetchItems = async (inventoryId: string): Promise<Item[]> => {
     throw new Error(`Failed to fetch items: ${error}`);
   }
 
-  return res.json();
+  const data = await res.json();
+  return Array.isArray(data) ? data : data.items || [];
 };
 
 export const addItem = async ({
@@ -55,20 +56,21 @@ export const deleteItem = async (itemId: string): Promise<void> => {
 };
 
 export const updateItem = async (
+  inventoryId: string,
   itemId: string,
   data: Partial<Item>
 ): Promise<Item> => {
-  const res = await fetch(`${API_URL}/api/items/${itemId}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
+  const res = await fetch(
+    `${API_URL}/api/inventories/${inventoryId}/items/${itemId}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    }
+  );
 
-  if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`Failed to update item: ${error}`);
-  }
+  if (!res.ok) throw new Error(`Failed to update item: ${await res.text()}`);
 
   return res.json();
 };

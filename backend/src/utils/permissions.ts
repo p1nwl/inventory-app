@@ -14,11 +14,8 @@ export function canViewInventory(
   user: User | null,
   inventory: Inventory
 ): boolean {
-  if (!user || user.role === "GUEST") return inventory.isPublic;
-
-  if (user.role === "ADMIN") {
-    return true;
-  }
+  if (!user) return inventory.isPublic;
+  if (user.role === "ADMIN") return true;
 
   return (
     inventory.isPublic ||

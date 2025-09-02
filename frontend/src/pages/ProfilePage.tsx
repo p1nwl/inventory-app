@@ -21,6 +21,7 @@ function ProfilePage() {
     queryKey: ["profile"],
     queryFn: fetchProfile,
     enabled: !!session,
+    refetchOnMount: "always",
   });
 
   const createMutation = useMutation({
