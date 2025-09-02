@@ -89,6 +89,7 @@ export default async function handler(req, res) {
           sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
           path: "/",
           secure: process.env.NODE_ENV === "production",
+          domain: ".inventory-app.online",
         },
       },
       csrfToken: {
@@ -98,6 +99,7 @@ export default async function handler(req, res) {
           sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
           path: "/",
           secure: process.env.NODE_ENV === "production",
+          domain: ".inventory-app.online",
         },
       },
       callbackUrl: {
@@ -106,6 +108,7 @@ export default async function handler(req, res) {
           sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
           path: "/",
           secure: process.env.NODE_ENV === "production",
+          domain: ".inventory-app.online",
         },
       },
       state: {
@@ -116,6 +119,7 @@ export default async function handler(req, res) {
           secure: process.env.NODE_ENV === "production",
           path: "/",
           maxAge: 900,
+          domain: ".inventory-app.online",
         },
       },
     },
