@@ -43,6 +43,9 @@ adapter.getUserByAccount = async (account) => {
   return result;
 };
 
+const isProd = process.env.NODE_ENV === "production";
+const cookieDomain = isProd ? ".inventory-app.online" : undefined;
+
 function runMiddleware(req, res, fn) {
   return new Promise((resolve, reject) => {
     fn(req, res, (result) => {
@@ -86,52 +89,40 @@ export default async function handler(req, res) {
         name: "next-auth.session-token",
         options: {
           httpOnly: true,
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          sameSite: isProd ? "none" : "lax",
           path: "/",
-          secure: process.env.NODE_ENV === "production",
-          domain:
-            process.env.NODE_ENV === "production"
-              ? ".inventory-app.online"
-              : "localhost",
+          secure: isProd,
+          domain: cookieDomain,
         },
       },
       csrfToken: {
         name: "next-auth.csrf-token",
         options: {
           httpOnly: true,
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          sameSite: isProd ? "none" : "lax",
           path: "/",
-          secure: process.env.NODE_ENV === "production",
-          domain:
-            process.env.NODE_ENV === "production"
-              ? ".inventory-app.online"
-              : "localhost",
+          secure: isProd,
+          domain: cookieDomain,
         },
       },
       callbackUrl: {
         name: "next-auth.callback-url",
         options: {
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+          sameSite: isProd ? "none" : "lax",
           path: "/",
-          secure: process.env.NODE_ENV === "production",
-          domain:
-            process.env.NODE_ENV === "production"
-              ? ".inventory-app.online"
-              : "localhost",
+          secure: isProd,
+          domain: cookieDomain,
         },
       },
       state: {
         name: "next-auth.state",
         options: {
           httpOnly: true,
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-          secure: process.env.NODE_ENV === "production",
+          sameSite: isProd ? "none" : "lax",
+          secure: isProd,
           path: "/",
           maxAge: 900,
-          domain:
-            process.env.NODE_ENV === "production"
-              ? ".inventory-app.online"
-              : "localhost",
+          domain: cookieDomain,
         },
       },
     },
