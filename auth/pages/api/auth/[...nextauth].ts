@@ -89,6 +89,10 @@ export default async function handler(req, res) {
           sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
           path: "/",
           secure: process.env.NODE_ENV === "production",
+          domain:
+            process.env.NODE_ENV === "production"
+              ? ".inventory-app.online"
+              : "localhost",
         },
       },
       csrfToken: {
@@ -98,6 +102,10 @@ export default async function handler(req, res) {
           sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
           path: "/",
           secure: process.env.NODE_ENV === "production",
+          domain:
+            process.env.NODE_ENV === "production"
+              ? ".inventory-app.online"
+              : "localhost",
         },
       },
       callbackUrl: {
@@ -106,6 +114,10 @@ export default async function handler(req, res) {
           sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
           path: "/",
           secure: process.env.NODE_ENV === "production",
+          domain:
+            process.env.NODE_ENV === "production"
+              ? ".inventory-app.online"
+              : "localhost",
         },
       },
       state: {
@@ -116,6 +128,10 @@ export default async function handler(req, res) {
           secure: process.env.NODE_ENV === "production",
           path: "/",
           maxAge: 900,
+          domain:
+            process.env.NODE_ENV === "production"
+              ? ".inventory-app.online"
+              : "localhost",
         },
       },
     },

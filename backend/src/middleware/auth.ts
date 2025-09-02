@@ -17,10 +17,12 @@ export const authenticate = async (
 
     const sessionRes = await fetch(`${process.env.AUTH_URL}/api/auth/session`, {
       headers,
+      credentials: "include",
     });
 
     if (sessionRes.ok) {
       const session = await sessionRes.json();
+
       if (session?.user) {
         req.user = {
           id: session.user.id,
@@ -30,10 +32,18 @@ export const authenticate = async (
           theme: session.user.theme || "LIGHT",
           language: session.user.language || "en",
         };
+      } else {
+        console.warn("No user in session response");
       }
+    } else {
+      console.warn("Session fetch failed:", sessionRes.status);
     }
   } catch (err) {
     console.error("Auth check failed:", err);
+  }
+
+  if (!req.user) {
+    req.user = { id: "guest", role: "GUEST" } as any;
   }
 
   next();
