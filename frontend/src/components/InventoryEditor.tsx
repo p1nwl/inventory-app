@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { Inventory } from "../types";
 import { useLocalStorageWithUser } from "../hooks/useLocalStorageWithUser";
 import { useAuth } from "../hooks/useAuth.js";
@@ -9,13 +9,13 @@ import { useTranslation } from "react-i18next";
 import { useInventory } from "@/hooks/useInventory.js";
 import { useItems } from "@/hooks/useItems.js";
 
-interface InventoryEditorProps {
-  inventoryId: string;
-}
-
-const InventoryEditor = ({
+function InventoryEditor({
   inventoryId,
-}: InventoryEditorProps): React.JSX.Element => {
+  isGuest = false,
+}: {
+  inventoryId: string;
+  isGuest?: boolean;
+}) {
   const { save } = useLocalStorageWithUser();
   const { isLoading: authLoading } = useAuth();
   const { t } = useTranslation();
@@ -56,8 +56,8 @@ const InventoryEditor = ({
     }
   }, [inventory]);
 
-  const canEdit = !!inventory?.permissions?.canEdit;
-  const canEditItems = !!inventory?.permissions?.canEditItems;
+  const canEdit = !isGuest && !!inventory?.permissions?.canEdit;
+  const canEditItems = !isGuest && !!inventory?.permissions?.canEditItems;
 
   useEffect(() => {
     if (!canEdit || isUpdating) return;
@@ -169,13 +169,33 @@ const InventoryEditor = ({
               <th className="px-3 py-2">{t("bool1")}</th>
             </tr>
           </thead>
-          {loadingItems ? (
-            <p className="text-center py-4 text-gray-500">
-              {t("loadingItems")}...
-            </p>
-          ) : (
-            <tbody>
-              {items.map((item) => (
+          <tbody>
+            {loadingItems ? (
+              <tr>
+                <td colSpan={5} className="text-center py-4 text-gray-500">
+                  <span className="inline-flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    {t("loadingItems")}...
+                  </span>
+                </td>
+              </tr>
+            ) : (
+              items.map((item) => (
                 <tr
                   key={item.id}
                   onClick={() => handleItemClick(item)}
@@ -191,9 +211,9 @@ const InventoryEditor = ({
                     {item.bool1 ? "✅" : "❌"}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          )}
+              ))
+            )}
+          </tbody>
         </table>
         <ItemModal
           item={selectedItem || ({} as Item)}
@@ -205,6 +225,6 @@ const InventoryEditor = ({
       </div>
     </div>
   );
-};
+}
 
 export default InventoryEditor;

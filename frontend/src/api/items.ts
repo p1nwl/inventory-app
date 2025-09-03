@@ -74,3 +74,16 @@ export const updateItem = async (
 
   return res.json();
 };
+
+export const fetchAllItems = async (): Promise<Item[]> => {
+  const res = await fetch(`${API_URL}/api/items`, {
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Failed to fetch all items: ${error}`);
+  }
+
+  return res.json();
+};

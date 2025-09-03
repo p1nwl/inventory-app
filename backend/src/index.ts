@@ -410,6 +410,58 @@ app.put("/api/profile/language", authenticate, async (req, res) => {
   }
 });
 
+app.put("/api/user/theme", authenticate, async (req, res) => {
+  const userId = req.user!.id;
+  const { theme } = req.body;
+
+  if (!["LIGHT", "DARK"].includes(theme)) {
+    return res.status(400).json({ error: "Invalid theme" });
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { theme },
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Update theme error:", error);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.get("/api/items", async (req, res) => {
+  try {
+    const items = await prisma.item.findMany({
+      include: {
+        inventory: {
+          select: {
+            id: true,
+            title: true,
+            creator: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+
+    const result = items.map((item) => ({
+      ...item,
+      permissions: {
+        canView: true,
+        canEdit: false,
+        canEditItems: false,
+      },
+    }));
+
+    res.json(result);
+  } catch (error) {
+    console.error("Fetch all items error:", error);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

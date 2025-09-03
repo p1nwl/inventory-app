@@ -4,7 +4,7 @@
   "fillForm": "Fill in the form below and save your changes",
   "cancel": "Cancel",
   "save": "Save",
-  "customId": "Custom ID",
+  "customId": "Custom Name",
   "string1": "String 1",
   "int1": "Integer 1",
   "bool1": "Boolean 1",
@@ -17,6 +17,7 @@
     "lastUpdated": "Last Updated"
   },
   "loadingInventories": "Loading inventories...",
+  "loadingItems": "Loading items...",
   "failedToLoadInventories": "Failed to load inventories",
   "retry": "Try again",
   "appName": "Inventory App",
@@ -40,11 +41,7 @@
   "accessibleInventories": "Accessible Inventories",
   "noAccessibleInventories": "You don’t have access to other inventories",
   "creator": "Creator",
-  "loginWith": "Login with:",
-  "loginWithGoogle": "Login with Google",
-  "loginWithFacebook": "Login with Facebook",
-  "google": "Google",
-  "facebook": "Facebook",
+  "Enter": "Log in",
   "loginErrorGoogle": "Unable to redirect to Google login. Please try again.",
   "loginErrorFacebook": "Unable to redirect to Facebook login. Please try again.",
   "saveError": "Failed to save. Please try again.",
@@ -61,5 +58,10 @@
   "inventoryTitle": "Inventory title",
   "descriptionPlaceholder": "Description (optional)",
   "untitledInventory": "Untitled Inventory",
-  "clickToAddDescription": "Click to add description..."
+  "clickToAddDescription": "Click to add description...",
+  "guestViewInfo": "You are not logged in. You can view the inventory as a guest.",
+  "signInToEdit": "Sign in to edit",
+  "signIn": "Sign in",
+  "allItems": "All items",
+  "id": "ID"
 }

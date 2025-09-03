@@ -52,7 +52,7 @@ function ProfilePage() {
     );
   }
 
-  if (!session) return <Navigate to="/" />;
+  if (!session) return <Navigate to="/login" />;
 
   if (isLoading)
     return <div className="p-5 text-center">{t("loadingProfile")}</div>;
@@ -89,14 +89,14 @@ function ProfilePage() {
         <table className="w-full border-collapse border border-gray-300 mb-8">
           <thead>
             <tr className="bg-gray-700">
-              <th className="border border-gray-300 px-4 py-2 text-left">ID</th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
+              <th className="border border-gray-300 px-4 py-2">ID</th>
+              <th className="border border-gray-300 px-4 py-2">
                 {t("table.title")}
               </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
+              <th className="border border-gray-300 px-4 py-2">
                 {t("table.description")}
               </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
+              <th className="border border-gray-300 px-4 py-2">
                 {t("table.lastUpdated")}
               </th>
             </tr>
@@ -138,14 +138,14 @@ function ProfilePage() {
         <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border border-gray-300 px-4 py-2 text-left">ID</th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
+              <th className="border border-gray-300 px-4 py-2">ID</th>
+              <th className="border border-gray-300 px-4 py-2">
                 {t("table.title")}
               </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
+              <th className="border border-gray-300 px-4 py-2">
                 {t("creator")}
               </th>
-              <th className="border border-gray-300 px-4 py-2 text-left">
+              <th className="border border-gray-300 px-4 py-2">
                 {t("table.lastUpdated")}
               </th>
             </tr>

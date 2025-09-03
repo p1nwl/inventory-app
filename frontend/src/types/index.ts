@@ -84,6 +84,7 @@ export interface Item {
   version: number;
   createdAt: string;
   updatedAt: string;
+  updatedById: string;
   createdById: string;
 
   string1?: string | null;
@@ -138,10 +139,32 @@ export interface InventoryStats {
   avgInt3?: number | null;
 }
 
-export interface ProfileData {
-  myInventories: Inventory[];
-  accessibleInventories: Inventory[];
-}
+export type ProfileData = {
+  myInventories: Array<{
+    id: string;
+    title: string;
+    description: string | null;
+    creator: { name: string; email: string };
+    permissions: {
+      canView: boolean;
+      canEdit: boolean;
+      canEditItems: boolean;
+    };
+    updatedAt: string;
+  }>;
+  accessibleInventories: Array<{
+    id: string;
+    title: string;
+    description: string | null;
+    creator: { name: string; email: string };
+    permissions: {
+      canView: boolean;
+      canEdit: boolean;
+      canEditItems: boolean;
+    };
+    updatedAt: string;
+  }>;
+};
 
 import { z } from "zod";
 

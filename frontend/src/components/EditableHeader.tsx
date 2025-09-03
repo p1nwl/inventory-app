@@ -114,7 +114,7 @@ export function EditableHeader({
     <div className="cursor-text mb-6 space-y-1">
       <h2
         onClick={handleEdit}
-        className="text-2xl font-bold p-2 rounded hover:bg-gray-500 transition-colors box-border"
+        className="text-2xl font-bold p-2 rounded hover:bg-gray-500 hover:text-white transition-colors box-content"
       >
         {title && title.trim().length > 0 ? (
           title
@@ -125,14 +125,14 @@ export function EditableHeader({
       {description && description.trim().length > 0 ? (
         <p
           onClick={handleDescriptionClick}
-          className="text-white text-sm p-2 rounded hover:bg-gray-500 transition-colors"
+          className="text-sm p-2 rounded hover:bg-gray-500 hover:text-white transition-colors italic"
         >
           {description}
         </p>
       ) : (
         <p
           onClick={handleDescriptionClick}
-          className="text-white text-sm p-2 rounded hover:bg-gray-500 transition-colors italic"
+          className="text-sm p-2 rounded hover:bg-gray-500 transition-colors italic"
         >
           {t("clickToAddDescription")}
         </p>

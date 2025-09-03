@@ -96,8 +96,10 @@ model Item {
   customId       String
   version        Int      @default(1)
   createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   createdBy      User     @relation(fields: [createdById], references: [id])
   createdById    String
+  updatedBy      String?
 
   string1        String?
   string2        String?

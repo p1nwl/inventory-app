@@ -16,6 +16,7 @@ import Header from "./components/Header";
 import { AuthProvider } from "./context/AuthContext";
 import { useAuth } from "./hooks/useAuth.js";
 import { saveToStorage } from "./utils/storage";
+import { useTranslation } from "react-i18next";
 
 function RouteTracker() {
   const location = useLocation();
@@ -27,30 +28,35 @@ function RouteTracker() {
   return null;
 }
 
-function DynamicInventoryEditor() {
+function DynamicInventoryEditor({ isGuest }: { isGuest: boolean }) {
   const { id } = useParams<{ id: string }>();
   if (!id) {
     return <div className="p-5 text-red-600">Inventory not found</div>;
   }
-  return <InventoryEditor inventoryId={id} />;
+  return <InventoryEditor isGuest={isGuest} inventoryId={id} />;
 }
 
 function AppContent() {
   const { session, isLoading: authLoading } = useAuth();
-
+  const { i18n } = useTranslation();
   if (authLoading)
     return <div className="p-5 text-center">Loading session...</div>;
 
-  if (!session) return <LoginPage />;
-
   return (
-    <div className="min-h-screen">
+    <div key={i18n.language} className="min-h-screen">
       <Header />
       <div>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/inventory/:id" element={<DynamicInventoryEditor />} />
+          <Route path="/" element={<HomePage isGuest={!session} />} />
+          <Route
+            path="/profile"
+            element={session ? <ProfilePage /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/inventory/:id"
+            element={<DynamicInventoryEditor isGuest={!session} />}
+          />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>

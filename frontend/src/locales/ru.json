@@ -17,6 +17,7 @@
     "lastUpdated": "Последнее обновление"
   },
   "loadingInventories": "Загружаем инвентарь...",
+  "loadingItems": "Загружаем предметы...",
   "failedToLoadInventories": "Не получилось загрузить инвентарь",
   "retry": "Попробуйте снова",
   "appName": "Инвентарь",
@@ -40,11 +41,7 @@
   "accessibleInventories": "Доступные инвентари",
   "noAccessibleInventories": "У вас нет доступа к другим инвентарям",
   "creator": "Создатель",
-  "loginWith": "Войти через:",
-  "loginWithGoogle": "Войти через Google",
-  "loginWithFacebook": "Войти через Facebook",
-  "google": "Гугл",
-  "facebook": "Фейсбук",
+  "Enter": "Войти",
   "loginErrorGoogle": "Не удалось перейти на вход через Google. Попробуйте ещё раз.",
   "loginErrorFacebook": "Не удалось перейти на вход через Facebook. Попробуйте ещё раз.",
   "saveError": "Не удалось сохранить. Попробуйте ещё раз.",
@@ -61,5 +58,10 @@
   "inventoryTitle": "Название инвентаря",
   "descriptionPlaceholder": "Описание (необязательно)",
   "untitledInventory": "Без названия",
-  "clickToAddDescription": "Нажмите, чтобы добавить описание..."
+  "clickToAddDescription": "Нажмите, чтобы добавить описание...",
+  "guestViewInfo": "Вы не вошли в систему. Вы можете просматривать инвентарь как гость.",
+  "signInToEdit": "Войти, чтобы начать редактировать",
+  "signIn": "Войти",
+  "allItems": "Все предметы",
+  "id": "ID"
 }

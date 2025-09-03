@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth.js";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage.js";
+import { ModeToggle } from "@/components/ModeToggle";
+import { AUTH_URL } from "@/types";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -22,7 +24,7 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-gray-800 text-white p-4 flex justify-between items-center mb-5 shadow-md">
+    <header className="bg-gray-800 text-white p-4 flex justify-between items-center shadow-md">
       <h1
         className="m-0 cursor-pointer hover:text-gray-300 transition-colors"
         onClick={() => navigate("/")}
@@ -38,7 +40,9 @@ export default function Header() {
           <option value="en">EN</option>
           <option value="ru">RU</option>
         </select>
-        {session && (
+
+        <ModeToggle />
+        {session ? (
           <>
             <span>
               {t("hello")}, <strong>{session.user.name}</strong>
@@ -58,6 +62,15 @@ export default function Header() {
               {t("signOut")}
             </button>
           </>
+        ) : (
+          <button
+            onClick={() =>
+              (window.location.href = `${AUTH_URL}/api/auth/signin`)
+            }
+            className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors"
+          >
+            {t("signIn")}
+          </button>
         )}
       </div>
     </header>

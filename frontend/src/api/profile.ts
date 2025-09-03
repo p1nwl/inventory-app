@@ -37,3 +37,14 @@ export const handleLanguageChange = async (lang: string) => {
     return { language: lang };
   }
 };
+
+export const updateTheme = async (theme: "LIGHT" | "DARK"): Promise<void> => {
+  const res = await fetch(`${API_URL}/api/user/theme`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ theme }),
+  });
+
+  if (!res.ok) throw new Error("Failed to update theme");
+};
