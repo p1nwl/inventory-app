@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 type EditableHeaderProps = {
   title: string;
@@ -15,6 +16,7 @@ export function EditableHeader({
   onSave,
   onEditingChange,
 }: EditableHeaderProps) {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [localTitle, setLocalTitle] = useState(title);
   const [localDescription, setLocalDescription] = useState(description);
@@ -91,7 +93,7 @@ export function EditableHeader({
           onBlur={saveAndExit}
           onKeyDown={handleKeyDown}
           className="text-2xl font-semibold w-full border-b-2 border-blue-500 outline-none"
-          placeholder="Inventory title"
+          placeholder={t("inventoryTitle")}
         />
         <textarea
           ref={descriptionRef}
@@ -102,7 +104,7 @@ export function EditableHeader({
           onKeyDown={handleKeyDown}
           rows={3}
           className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none outline-none focus:border-blue-500"
-          placeholder="Description (optional)"
+          placeholder={t("descriptionPlaceholder")}
         />
       </div>
     );
@@ -117,7 +119,7 @@ export function EditableHeader({
         {title && title.trim().length > 0 ? (
           title
         ) : (
-          <span className="text-gray-200 italic">Untitled Inventory</span>
+          <span className="text-gray-200 italic">{t("untitledInventory")}</span>
         )}
       </h2>
       {description && description.trim().length > 0 ? (
@@ -132,7 +134,7 @@ export function EditableHeader({
           onClick={handleDescriptionClick}
           className="text-white text-sm p-2 rounded hover:bg-gray-500 transition-colors italic"
         >
-          Click to add description...
+          {t("clickToAddDescription")}
         </p>
       )}
     </div>

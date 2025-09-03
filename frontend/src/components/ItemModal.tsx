@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import type { Item } from "../types";
 import type { ItemFormValues } from "../types";
 import { formSchema } from "../types";
+import { useTranslation } from "react-i18next";
 
 export interface ItemModalProps {
   item: Item | null;
@@ -39,6 +40,7 @@ export function ItemModal({
   onSave,
   canEdit,
 }: ItemModalProps) {
+  const { t } = useTranslation();
   const form = useForm<ItemFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -81,12 +83,8 @@ export function ItemModal({
     >
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {item ? "Редактировать предмет" : "Добавить предмет"}
-          </DialogTitle>
-          <DialogDescription>
-            Заполните форму ниже и сохраните изменения
-          </DialogDescription>
+          <DialogTitle>{item ? t("editItem") : t("addItem")}</DialogTitle>
+          <DialogDescription>{t("fillForm")}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -99,7 +97,7 @@ export function ItemModal({
               name="customId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Custom ID</FormLabel>
+                  <FormLabel>{t("customId")}</FormLabel>
                   <FormControl>
                     <Input {...field} disabled={!canEdit} />
                   </FormControl>
@@ -113,7 +111,7 @@ export function ItemModal({
               name="string1"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>String 1</FormLabel>
+                  <FormLabel>{t("string1")}</FormLabel>
                   <FormControl>
                     <Input {...field} disabled={!canEdit} />
                   </FormControl>
@@ -127,7 +125,7 @@ export function ItemModal({
               name="int1"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Int 1</FormLabel>
+                  <FormLabel>{t("int1")}</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
@@ -151,7 +149,7 @@ export function ItemModal({
               name="bool1"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Bool 1</FormLabel>
+                  <FormLabel>{t("bool1")}</FormLabel>
                   <FormControl>
                     <input
                       type="checkbox"
@@ -168,9 +166,9 @@ export function ItemModal({
 
             <DialogFooter className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={onClose}>
-                Отмена
+                {t("cancel")}
               </Button>
-              {canEdit && <Button type="submit">Сохранить</Button>}
+              {canEdit && <Button type="submit">{t("save")}</Button>}
             </DialogFooter>
           </form>
         </Form>

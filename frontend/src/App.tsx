@@ -14,7 +14,7 @@ import HomePage from "./pages/HomePage";
 import InventoryEditor from "./components/InventoryEditor";
 import Header from "./components/Header";
 import { AuthProvider } from "./context/AuthContext";
-import { useAuth } from "./hooks/useAuth";
+import { useAuth } from "./hooks/useAuth.js";
 import { saveToStorage } from "./utils/storage";
 
 function RouteTracker() {
@@ -37,7 +37,6 @@ function DynamicInventoryEditor() {
 
 function AppContent() {
   const { session, isLoading: authLoading } = useAuth();
-  console.log("🔄 AppContent render", { session, authLoading });
 
   if (authLoading)
     return <div className="p-5 text-center">Loading session...</div>;

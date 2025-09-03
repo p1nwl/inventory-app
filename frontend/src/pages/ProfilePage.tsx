@@ -1,16 +1,18 @@
 import { Navigate, useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../hooks/useAuth.js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ProfileData } from "../types";
 import { fetchProfile } from "../api/profile";
 import { createInventory } from "../api/inventory";
 import { useLocalStorageWithUser } from "../hooks/useLocalStorageWithUser";
+import { useTranslation } from "react-i18next";
 
 function ProfilePage() {
   const { session, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { save } = useLocalStorageWithUser();
+  const { t } = useTranslation();
 
   const {
     data: profile,
@@ -45,57 +47,57 @@ function ProfilePage() {
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-lg text-gray-600">Checking session...</div>
+        <div className="text-lg text-gray-600">{t("checkingSession")}</div>
       </div>
     );
   }
 
-  if (!session) return <Navigate to="/login" />;
+  if (!session) return <Navigate to="/" />;
 
   if (isLoading)
-    return <div className="p-5 text-center">Loading profile...</div>;
+    return <div className="p-5 text-center">{t("loadingProfile")}</div>;
 
   if (error) {
     return (
       <div className="p-5 text-red-600">
-        Failed to load data.{" "}
+        {t("failedToLoadProfile")}.{" "}
         <button onClick={() => refetch()} className="text-blue-600 underline">
-          Try again
+          {t("retry")}
         </button>
       </div>
     );
   }
 
-  if (!profile) return <div className="p-5">No profile data.</div>;
+  if (!profile) return <div className="p-5">{t("noProfileData")}</div>;
 
   return (
     <div className="p-5 font-sans">
-      <h1 className="text-2xl font-bold mb-4">Personal Page</h1>
+      <h1 className="text-2xl font-bold mb-4">{t("personalPage")}</h1>
 
       <button
         onClick={handleCreateInventory}
         className="px-5 py-2.5 bg-green-600 text-white border-none rounded cursor-pointer mb-6"
-        aria-label="Create new inventory"
+        aria-label={t("createInventory")}
       >
-        + Create New Inventory
+        + {t("createInventory")}
       </button>
 
-      <h2 className="text-xl font-semibold mb-2">My Inventories</h2>
+      <h2 className="text-xl font-semibold mb-2">{t("myInventories")}</h2>
       {profile.myInventories.length === 0 ? (
-        <p>You haven’t created any inventories yet</p>
+        <p>{t("noMyInventories")}</p>
       ) : (
         <table className="w-full border-collapse border border-gray-300 mb-8">
           <thead>
             <tr className="bg-gray-700">
               <th className="border border-gray-300 px-4 py-2 text-left">ID</th>
               <th className="border border-gray-300 px-4 py-2 text-left">
-                Title
+                {t("table.title")}
               </th>
               <th className="border border-gray-300 px-4 py-2 text-left">
-                Description
+                {t("table.description")}
               </th>
               <th className="border border-gray-300 px-4 py-2 text-left">
-                Last Updated
+                {t("table.lastUpdated")}
               </th>
             </tr>
           </thead>
@@ -127,22 +129,24 @@ function ProfilePage() {
         </table>
       )}
 
-      <h2 className="text-xl font-semibold mb-2">Accessible Inventories</h2>
+      <h2 className="text-xl font-semibold mb-2">
+        {t("accessibleInventories")}
+      </h2>
       {profile.accessibleInventories.length === 0 ? (
-        <p>You don’t have access to other inventories</p>
+        <p>{t("noAccessibleInventories")}</p>
       ) : (
         <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
               <th className="border border-gray-300 px-4 py-2 text-left">ID</th>
               <th className="border border-gray-300 px-4 py-2 text-left">
-                Title
+                {t("table.title")}
               </th>
               <th className="border border-gray-300 px-4 py-2 text-left">
-                Creator
+                {t("creator")}
               </th>
               <th className="border border-gray-300 px-4 py-2 text-left">
-                Last Updated
+                {t("table.lastUpdated")}
               </th>
             </tr>
           </thead>

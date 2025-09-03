@@ -389,6 +389,27 @@ app.delete(
   }
 );
 
+app.put("/api/profile/language", authenticate, async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const { language } = req.body;
+
+    if (!language) {
+      return res.status(400).json({ error: "Language is required" });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { language },
+    });
+
+    res.json({ success: true, language: updatedUser.language });
+  } catch (error) {
+    console.error("Update language error:", error);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

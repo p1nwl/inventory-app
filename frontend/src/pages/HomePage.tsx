@@ -1,13 +1,14 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../hooks/useAuth.js";
 import { useLocalStorageWithUser } from "../hooks/useLocalStorageWithUser";
 import { useQuery } from "@tanstack/react-query";
 import { fetchInventories } from "../api/inventory";
+import i18n from "../i18n";
 
 export default function HomePage() {
   const { session } = useAuth();
   const navigate = useNavigate();
-  const { save, get } = useLocalStorageWithUser();
+  const { save } = useLocalStorageWithUser();
 
   const {
     data: inventories = [],
@@ -21,16 +22,18 @@ export default function HomePage() {
   });
 
   if (isLoading) {
-    return <div className="p-5 text-center">Loading inventories...</div>;
+    return (
+      <div className="p-5 text-center">{i18n.t("loadingInventories")}</div>
+    );
   }
 
   if (error) {
     console.error("Failed to load inventories:", error);
     return (
       <div className="p-5 text-red-600">
-        Failed to load inventories.{" "}
+        {i18n.t("failedToLoadInventories")}.{" "}
         <button onClick={() => refetch()} className="text-blue-600 underline">
-          Try again
+          i18n.t("retry")
         </button>
       </div>
     );
@@ -42,17 +45,17 @@ export default function HomePage() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold">All Inventories</h2>
+      <h2 className="text-xl font-semibold">{i18n.t("allInventories")}</h2>
       {visibleInventories.length === 0 ? (
-        <p>No inventories yet.</p>
+        <p>{i18n.t("noInventories")}</p>
       ) : (
         <table className="w-full border-collapse mt-2.5">
           <thead>
             <tr className="bg-gray-700">
-              <th className="p-2.5">Title</th>
-              <th className="p-2.5">Description</th>
-              <th className="p-2.5">Owner</th>
-              <th className="p-2.5">Last Updated</th>
+              <th className="p-2.5">{i18n.t("table.title")}</th>
+              <th className="p-2.5">{i18n.t("table.description")}</th>
+              <th className="p-2.5">{i18n.t("table.owner")}</th>
+              <th className="p-2.5">{i18n.t("table.lastUpdated")}</th>
             </tr>
           </thead>
           <tbody>
@@ -67,15 +70,7 @@ export default function HomePage() {
                 }}
                 className="cursor-pointer transition-colors duration-200 hover:bg-gray-400"
               >
-                <td
-                  className={`p-2.5 ${
-                    inv.id === get<string>("lastInventoryId", "")
-                      ? "font-bold"
-                      : "font-normal"
-                  }`}
-                >
-                  {inv.title}
-                </td>
+                <td className="p-2.5">{inv.title}</td>
                 <td className="p-2.5">{inv.description || "-"}</td>
                 <td className="p-2.5">{inv.creator.name}</td>
                 <td className="p-2.5">
