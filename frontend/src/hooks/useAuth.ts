@@ -1,6 +1,6 @@
 import { useContext } from "react";
-import AuthContext from "../context/AuthContext.js";
-import type { Session } from "../types/index.js";
+import AuthContext from "../context/AuthContext";
+import type { Session } from "../types/index";
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

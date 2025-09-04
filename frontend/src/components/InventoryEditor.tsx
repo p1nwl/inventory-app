@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import type { Inventory } from "../types";
 import { useLocalStorageWithUser } from "../hooks/useLocalStorageWithUser";
-import { useAuth } from "../hooks/useAuth.js";
+import { useAuth } from "../hooks/useAuth";
 import { EditableHeader } from "./EditableHeader";
 import type { Item } from "../types";
 import { ItemModal } from "./ItemModal";
 import { useTranslation } from "react-i18next";
-import { useInventory } from "@/hooks/useInventory.js";
-import { useItems } from "@/hooks/useItems.js";
+import { useInventory } from "@/hooks/useInventory";
+import { useItems } from "@/hooks/useItems";
 
 function InventoryEditor({
   inventoryId,

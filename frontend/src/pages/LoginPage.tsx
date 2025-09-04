@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginButton from "../components/LoginButton";
 import { getFromStorage, removeFromStorage } from "../utils/storage";
-import { useAuth } from "../hooks/useAuth.js";
+import { useAuth } from "../hooks/useAuth";
 import { useTranslation } from "react-i18next";
 
 function LoginPage() {

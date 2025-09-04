@@ -14,7 +14,7 @@ import HomePage from "./pages/HomePage";
 import InventoryEditor from "./components/InventoryEditor";
 import Header from "./components/Header";
 import { AuthProvider } from "./context/AuthContext";
-import { useAuth } from "./hooks/useAuth.js";
+import { useAuth } from "./hooks/useAuth";
 import { saveToStorage } from "./utils/storage";
 import { useTranslation } from "react-i18next";
 
