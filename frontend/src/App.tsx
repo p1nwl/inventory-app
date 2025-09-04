@@ -43,9 +43,9 @@ function AppContent() {
     return <div className="p-5 text-center">Loading session...</div>;
 
   return (
-    <div key={i18n.language} className="min-h-screen">
+    <div key={i18n.language} className="flex min-h-screen flex-col">
       <Header />
-      <div>
+      <main className="flex-1 grid">
         <Routes>
           <Route path="/" element={<HomePage isGuest={!session} />} />
           <Route
@@ -59,7 +59,7 @@ function AppContent() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-      </div>
+      </main>
     </div>
   );
 }
