@@ -1,4 +1,4 @@
-import { useAuth } from "./useAuth.js";
+import { useAuth } from "./useAuth";
 import {
   saveToStorage,
   getFromStorage,

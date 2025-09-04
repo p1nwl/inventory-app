@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth.js";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "@/hooks/useLanguage.js";
+import { useLanguage } from "@/hooks/useLanguage";
 import { ModeToggle } from "@/components/ModeToggle";
 import { AUTH_URL } from "@/types";
 

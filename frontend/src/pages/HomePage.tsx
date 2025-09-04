@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth.js";
+import { useAuth } from "../hooks/useAuth";
 import { useLocalStorageWithUser } from "../hooks/useLocalStorageWithUser";
 import { useQuery } from "@tanstack/react-query";
 import { fetchInventories } from "../api/inventory";
 import { useTranslation } from "react-i18next";
-import type { Inventory, Item } from "@/types/index.js";
-import { fetchAllItems } from "@/api/items.js";
+import type { Inventory, Item } from "@/types/index";
+import { fetchAllItems } from "@/api/items";
 
 export default function HomePage({ isGuest = false }: { isGuest?: boolean }) {
   const { session } = useAuth();
