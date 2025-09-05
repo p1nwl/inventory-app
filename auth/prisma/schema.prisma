@@ -37,6 +37,7 @@ model User {
   comments              Comment[]
   likes                 Like[]
   itemsCreated          Item[]
+  itemsUpdated          Item[]   @relation("ItemsUpdatedBy")
 
   @@map("users")
 }
@@ -99,7 +100,8 @@ model Item {
   updatedAt      DateTime @updatedAt
   createdBy      User     @relation(fields: [createdById], references: [id])
   createdById    String
-  updatedBy      String?
+  updatedBy      User?     @relation("ItemsUpdatedBy", fields: [updatedById], references: [id])
+  updatedById    String? 
 
   string1        String?
   string2        String?
@@ -123,9 +125,15 @@ model InventoryUserAccess {
   inventoryId  String
   user         User       @relation(fields: [userId], references: [id])
   userId       String
+  accessLevel  AccessLevel
   createdAt    DateTime   @default(now())
 
   @@unique([inventoryId, userId])
+}
+
+enum AccessLevel {
+  VIEWER
+  EDITOR
 }
 
 model Comment {

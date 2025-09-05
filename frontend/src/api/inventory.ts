@@ -1,4 +1,4 @@
-import type { Inventory } from "../types";
+import type { Inventory, InventoryUserAccess } from "../types";
 import { API_URL } from "../types";
 
 export const fetchInventory = async (
@@ -64,4 +64,76 @@ export const createInventory = async ({
 
   if (!res.ok) throw new Error("Failed to create inventory");
   return res.json();
+};
+
+export const updatePublic = async (
+  inventoryId: string,
+  isPublic: boolean,
+  version: number
+): Promise<Inventory> => {
+  const res = await fetch(`${API_URL}/api/inventories/${inventoryId}/public`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ isPublic, version }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+export const fetchAccessList = async (
+  inventoryId: string
+): Promise<InventoryUserAccess[]> => {
+  const res = await fetch(`${API_URL}/api/inventories/${inventoryId}/access`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+export const addAccess = async (
+  inventoryId: string,
+  email: string,
+  accessLevel: "VIEWER" | "EDITOR"
+): Promise<InventoryUserAccess[]> => {
+  const res = await fetch(`${API_URL}/api/inventories/${inventoryId}/access`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ email, accessLevel }),
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+export const updateAccess = async (
+  inventoryId: string,
+  userId: string,
+  accessLevel: "VIEWER" | "EDITOR"
+): Promise<InventoryUserAccess> => {
+  const res = await fetch(
+    `${API_URL}/api/inventories/${inventoryId}/access/${userId}`,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ accessLevel }),
+    }
+  );
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+export const removeAccess = async (
+  inventoryId: string,
+  userId: string
+): Promise<void> => {
+  const res = await fetch(
+    `${API_URL}/api/inventories/${inventoryId}/access/${userId}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
+  if (!res.ok) throw new Error(await res.text());
 };

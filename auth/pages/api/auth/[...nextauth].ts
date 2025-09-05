@@ -73,10 +73,20 @@ export default async function handler(req, res) {
       GoogleProvider({
         clientId: process.env.GOOGLE_CLIENT_ID!,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        authorization: {
+          params: {
+            prompt: "select_account",
+          },
+        },
       }),
       FacebookProvider({
         clientId: process.env.FACEBOOK_CLIENT_ID!,
         clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+        authorization: {
+          params: {
+            auth_type: "reauthenticate",
+          },
+        },
       }),
     ],
     secret: process.env.NEXTAUTH_SECRET,

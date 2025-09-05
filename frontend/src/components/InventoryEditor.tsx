@@ -8,6 +8,7 @@ import { ItemModal } from "./ItemModal";
 import { useTranslation } from "react-i18next";
 import { useInventory } from "@/hooks/useInventory";
 import { useItems } from "@/hooks/useItems";
+import { AccessSettings } from "./AccessSettings";
 
 function InventoryEditor({
   inventoryId,
@@ -17,7 +18,7 @@ function InventoryEditor({
   isGuest?: boolean;
 }) {
   const { save } = useLocalStorageWithUser();
-  const { isLoading: authLoading } = useAuth();
+  const { session, isLoading: authLoading } = useAuth();
   const { t } = useTranslation();
 
   const [isConflict, setIsConflict] = useState(false);
@@ -58,6 +59,10 @@ function InventoryEditor({
 
   const canEdit = !isGuest && !!inventory?.permissions?.canEdit;
   const canEditItems = !isGuest && !!inventory?.permissions?.canEditItems;
+
+  const isCreatorOrAdmin =
+    inventory?.creatorId === session?.user?.id ||
+    session?.user?.role === "ADMIN";
 
   useEffect(() => {
     if (!canEdit || isUpdating) return;
@@ -128,7 +133,7 @@ function InventoryEditor({
   }
 
   return (
-    <div className="p-5 font-sans max-w-4xl mx-auto">
+    <div className="p-5 font-sans max-w-6xl mx-auto w-full">
       <EditableHeader
         title={data.title || ""}
         description={data.description ?? ""}
@@ -199,7 +204,7 @@ function InventoryEditor({
                 <tr
                   key={item.id}
                   onClick={() => handleItemClick(item)}
-                  className="hover:bg-gray-600 cursor-pointer"
+                  className="hover:bg-gray-400 cursor-pointer"
                 >
                   <td className="px-3 py-2 text-xs text-gray-500">
                     {item.id.slice(0, 8)}...
@@ -223,6 +228,15 @@ function InventoryEditor({
           canEdit={canEditItems}
         />
       </div>
+      {isCreatorOrAdmin && (
+        <AccessSettings
+          inventoryId={inventoryId}
+          isPublic={!!inventory.isPublic}
+          canEdit={true}
+          version={inventory.version}
+          onUpdate={(updated) => setData((prev) => ({ ...prev, ...updated }))}
+        />
+      )}
     </div>
   );
 }

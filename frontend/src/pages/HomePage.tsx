@@ -51,7 +51,7 @@ export default function HomePage({ isGuest = false }: { isGuest?: boolean }) {
       <section>
         <h2 className="text-xl font-semibold mb-4">{t("allInventories")}</h2>
         {loadingInventories ? (
-          <p>{t("loading")}...</p>
+          <p>{t("loading")}</p>
         ) : inventoryError ? (
           <p>{t("failedToLoadInventories")}</p>
         ) : visibleInventories.length === 0 ? (
@@ -97,7 +97,7 @@ export default function HomePage({ isGuest = false }: { isGuest?: boolean }) {
       <section>
         <h2 className="text-xl font-semibold mb-4">{t("allItems")}</h2>
         {loadingItems ? (
-          <p className="">{t("loadingItems")}...</p>
+          <p className="">{t("loadingItems")}</p>
         ) : allItems.length === 0 ? (
           <p className="">{t("noItemsFound")}</p>
         ) : (
@@ -121,7 +121,7 @@ export default function HomePage({ isGuest = false }: { isGuest?: boolean }) {
                       className="cursor-pointer hover:bg-gray-500 transition-colors"
                     >
                       <td className="px-3 py-2 text-xs">
-                        {item.id.slice(0, 8)}...
+                        {item.id.slice(0, 8)}
                       </td>
                       <td className="px-3 py-2">{item.customId}</td>
                       <td className="px-3 py-2">{item.string1 || "-"}</td>

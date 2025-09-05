@@ -137,7 +137,7 @@ function ProfilePage() {
       ) : (
         <table className="w-full border-collapse border border-gray-300">
           <thead>
-            <tr className="bg-gray-100">
+            <tr className="bg-gray-700">
               <th className="border border-gray-300 px-4 py-2">ID</th>
               <th className="border border-gray-300 px-4 py-2">
                 {t("table.title")}
@@ -152,7 +152,16 @@ function ProfilePage() {
           </thead>
           <tbody>
             {profile.accessibleInventories.map((inv) => (
-              <tr key={inv.id} className="hover:bg-gray-500">
+              <tr
+                onClick={() => {
+                  if (session) {
+                    save(`lastInventoryId_${session.user.id}`, inv.id);
+                  }
+                  navigate(`/inventory/${inv.id}`);
+                }}
+                key={inv.id}
+                className="hover:bg-gray-500"
+              >
                 <td className="border border-gray-300 px-4 py-2">{inv.id}</td>
                 <td className="border border-gray-300 px-4 py-2">
                   {inv.title}

@@ -83,9 +83,10 @@ export interface Item {
   customId: string;
   version: number;
   createdAt: string;
-  updatedAt: string;
-  updatedById: string;
   createdById: string;
+  updatedAt: string;
+  updatedBy: string;
+  updatedById?: string;
 
   string1?: string | null;
   string2?: string | null;
@@ -100,18 +101,24 @@ export interface Item {
 
 export interface ItemsResponse {
   items: Item[];
-  permissions: {
-    canView: boolean;
-    canEdit: boolean;
-    canEditItems: boolean;
-  };
+  permissions: Permissions;
+}
+
+export type AccessLevel = "VIEWER" | "EDITOR";
+
+export interface AccessUser {
+  id: string;
+  name: string | null;
+  email: string;
 }
 
 export interface InventoryUserAccess {
   id: string;
   inventoryId: string;
   userId: string;
+  accessLevel: AccessLevel;
   createdAt: string;
+  user: AccessUser;
 }
 
 export interface Comment {
@@ -145,11 +152,7 @@ export type ProfileData = {
     title: string;
     description: string | null;
     creator: { name: string; email: string };
-    permissions: {
-      canView: boolean;
-      canEdit: boolean;
-      canEditItems: boolean;
-    };
+    permissions: Permissions;
     updatedAt: string;
   }>;
   accessibleInventories: Array<{
@@ -157,11 +160,7 @@ export type ProfileData = {
     title: string;
     description: string | null;
     creator: { name: string; email: string };
-    permissions: {
-      canView: boolean;
-      canEdit: boolean;
-      canEditItems: boolean;
-    };
+    permissions: Permissions;
     updatedAt: string;
   }>;
 };

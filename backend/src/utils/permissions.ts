@@ -6,7 +6,7 @@ type User = {
 type Inventory = {
   creatorId: string;
   isPublic: boolean;
-  accessList: Array<{ userId: string; writeAccess?: boolean }>;
+  accessList: Array<{ userId: string; accessLevel: "VIEWER" | "EDITOR" }>;
   isReadOnly?: boolean;
 };
 
@@ -33,17 +33,17 @@ export function canViewItems(
 
 export function canEdit(user: User | null, inventory: Inventory): boolean {
   if (!user) return false;
+  if (user.role === "ADMIN") return true;
+  if (inventory.creatorId === user.id) return true;
 
-  return inventory.creatorId === user.id || user.role === "ADMIN";
+  return inventory.accessList.some(
+    (a) => a.userId === user.id && a.accessLevel === "EDITOR"
+  );
 }
 
 export function canEditItems(user: User | null, inventory: Inventory): boolean {
   if (!user) return false;
+  if (inventory.isReadOnly) return false;
 
-  return (
-    canEdit(user, inventory) ||
-    (inventory.accessList.some((a) => a.userId === user.id && a.writeAccess) &&
-      !inventory.isReadOnly) ||
-    (inventory.isPublic && !inventory.isReadOnly)
-  );
+  return canEdit(user, inventory);
 }
