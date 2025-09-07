@@ -179,3 +179,28 @@ export const formSchema = z.object({
 });
 
 export type ItemFormValues = z.infer<typeof formSchema>;
+
+export interface ConflictError extends Error {
+  status: number;
+  currentVersion: number | null;
+  yourVersion: number | null;
+  message: string;
+}
+
+export function createConflictError(
+  currentVersion: number | null,
+  yourVersion: number | null,
+  message: string = "This inventory was modified by another user."
+): ConflictError {
+  const error = new Error(message) as ConflictError;
+  error.status = 409;
+  error.currentVersion = currentVersion;
+  error.yourVersion = yourVersion;
+  return error;
+}
+export interface ConflictResponse {
+  error: string;
+  message: string;
+  currentVersion: number;
+  yourVersion: number;
+}

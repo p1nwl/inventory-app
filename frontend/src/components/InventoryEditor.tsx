@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useInventory } from "@/hooks/useInventory";
 import { useItems } from "@/hooks/useItems";
 import { AccessSettings } from "./AccessSettings";
+import type { ConflictError } from "../types";
 
 function InventoryEditor({
   inventoryId,
@@ -36,7 +37,7 @@ function InventoryEditor({
     inventory,
     loadingInventory,
     inventoryError,
-    updateInventory,
+    updateInventoryAsync,
     isUpdating,
   } = useInventory(inventoryId);
 
@@ -67,14 +68,33 @@ function InventoryEditor({
   useEffect(() => {
     if (!canEdit || isUpdating) return;
 
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       if (!isEditingRef.current && data.id) {
-        updateInventory(data);
+        try {
+          await updateInventoryAsync(data);
+        } catch (error: unknown) {
+          if (
+            error instanceof Error &&
+            "status" in error &&
+            error.status === 409 &&
+            "currentVersion" in error
+          ) {
+            const conflictError = error as ConflictError;
+            if (inventory) {
+              setLatestData({
+                ...inventory,
+                version: conflictError.currentVersion as number,
+              });
+              setIsConflict(true);
+            }
+          }
+          console.error("Auto-save failed:", (error as Error).message);
+        }
       }
     }, 8000);
 
     return () => clearInterval(interval);
-  }, [data, canEdit, updateInventory, isUpdating]);
+  }, [data, canEdit, updateInventoryAsync, isUpdating, inventory]);
 
   const resolveConflict = () => {
     if (!latestData) return;
@@ -83,7 +103,9 @@ function InventoryEditor({
       ...latestData,
       title: prev.title,
       description: prev.description,
+      version: latestData.version,
     }));
+
     setIsConflict(false);
     setLatestData(null);
   };
@@ -107,6 +129,39 @@ function InventoryEditor({
       data: updatedData,
     });
     setSelectedItem(null);
+  };
+
+  const handleSaveWithConflictHandling = async ({
+    title,
+    description,
+  }: {
+    title: string;
+    description: string;
+  }) => {
+    const newData = { ...data, title, description };
+    setData(newData);
+
+    try {
+      await updateInventoryAsync(newData);
+    } catch (error: unknown) {
+      if (
+        error instanceof Error &&
+        "status" in error &&
+        error.status === 409 &&
+        "currentVersion" in error
+      ) {
+        const conflictError = error as ConflictError;
+        if (inventory) {
+          setLatestData({
+            ...inventory,
+            version: conflictError.currentVersion as number,
+          });
+          setIsConflict(true);
+        }
+      } else {
+        alert(`Error: ${(error as Error).message}`);
+      }
+    }
   };
 
   if (authLoading || loadingInventory) {
@@ -138,11 +193,7 @@ function InventoryEditor({
         title={data.title || ""}
         description={data.description ?? ""}
         canEdit={canEdit}
-        onSave={({ title, description }) => {
-          const newData = { ...data, title, description };
-          setData(newData);
-          updateInventory(newData);
-        }}
+        onSave={handleSaveWithConflictHandling}
         onEditingChange={(editing) => (isEditingRef.current = editing)}
       />
 

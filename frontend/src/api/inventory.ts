@@ -1,5 +1,7 @@
 import type { Inventory, InventoryUserAccess } from "../types";
 import { API_URL } from "../types";
+import type { ConflictResponse } from "../types";
+import { createConflictError } from "../types";
 
 export const fetchInventory = async (
   inventoryId: string
@@ -28,8 +30,51 @@ export const updateInventory = async (
   });
 
   if (!res.ok) {
-    const error = await res.text();
-    throw new Error(`Failed to update inventory: ${error}`);
+    let errorData: unknown = null;
+    try {
+      errorData = await res.json();
+    } catch {
+      // Игнорируем ошибку парсинга JSON, если тело не JSON
+    }
+
+    if (res.status === 409) {
+      if (
+        errorData &&
+        typeof errorData === "object" &&
+        "currentVersion" in errorData &&
+        "yourVersion" in errorData
+      ) {
+        const typedErrorData = errorData as ConflictResponse;
+        throw createConflictError(
+          typedErrorData.currentVersion,
+          typedErrorData.yourVersion,
+          typedErrorData.message
+        );
+      } else {
+        throw createConflictError(null, data.version || null);
+      }
+    }
+
+    let errorMessage: string;
+    if (
+      errorData &&
+      typeof errorData === "object" &&
+      "message" in errorData &&
+      typeof errorData.message === "string"
+    ) {
+      errorMessage = errorData.message;
+    } else if (
+      errorData &&
+      typeof errorData === "object" &&
+      "error" in errorData &&
+      typeof errorData.error === "string"
+    ) {
+      errorMessage = errorData.error;
+    } else {
+      errorMessage = `Failed to update inventory: ${res.statusText}`;
+    }
+
+    throw new Error(errorMessage);
   }
 
   return res.json();

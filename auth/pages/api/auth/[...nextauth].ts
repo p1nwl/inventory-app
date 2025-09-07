@@ -76,6 +76,8 @@ export default async function handler(req, res) {
         authorization: {
           params: {
             prompt: "select_account",
+            access_type: "offline",
+            response_type: "code",
           },
         },
       }),

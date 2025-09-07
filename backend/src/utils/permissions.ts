@@ -24,13 +24,6 @@ export function canViewInventory(
   );
 }
 
-export function canViewItems(
-  _user: User | null,
-  _inventory: Inventory
-): boolean {
-  return true;
-}
-
 export function canEdit(user: User | null, inventory: Inventory): boolean {
   if (!user) return false;
   if (user.role === "ADMIN") return true;
@@ -43,7 +36,6 @@ export function canEdit(user: User | null, inventory: Inventory): boolean {
 
 export function canEditItems(user: User | null, inventory: Inventory): boolean {
   if (!user) return false;
-  if (inventory.isReadOnly) return false;
 
   return canEdit(user, inventory);
 }
