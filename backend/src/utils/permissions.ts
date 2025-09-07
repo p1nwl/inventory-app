@@ -37,5 +37,7 @@ export function canEdit(user: User | null, inventory: Inventory): boolean {
 export function canEditItems(user: User | null, inventory: Inventory): boolean {
   if (!user) return false;
 
+  if (inventory.isPublic) return true;
+
   return canEdit(user, inventory);
 }
