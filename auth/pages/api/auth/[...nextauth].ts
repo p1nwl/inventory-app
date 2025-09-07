@@ -75,7 +75,7 @@ export default async function handler(req, res) {
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
         authorization: {
           params: {
-            prompt: "select_account",
+            prompt: "consent select_account",
             access_type: "offline",
             response_type: "code",
           },
