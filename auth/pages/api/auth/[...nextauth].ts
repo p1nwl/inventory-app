@@ -37,12 +37,6 @@ const cors = Cors({
 
 const adapter = PrismaAdapter(prisma);
 
-const originalGetUserByAccount = adapter.getUserByAccount;
-adapter.getUserByAccount = async (account) => {
-  const result = await originalGetUserByAccount(account);
-  return result;
-};
-
 const isProd = process.env.NODE_ENV === "production";
 const cookieDomain = isProd ? ".inventory-app.online" : undefined;
 
@@ -75,7 +69,7 @@ export default async function handler(req, res) {
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
         authorization: {
           params: {
-            prompt: "select_account",
+            prompt: "consent select_account",
             access_type: "offline",
             response_type: "code",
           },
@@ -139,25 +133,61 @@ export default async function handler(req, res) {
       },
     },
     callbacks: {
-      async signIn({ user }) {
+      async signIn({ user, account }) {
+        console.log("Sign in attempt with user:", user);
+        console.log("Sign in attempt with account:", account);
+
         const existingUser = await prisma.user.findUnique({
           where: { email: user.email! },
         });
 
         if (!existingUser) {
-          await prisma.user.create({
+          const newUser = await prisma.user.create({
             data: {
-              id: user.id,
               email: user.email!,
               name: user.name || "Anonymous",
               role: "USER",
               language: "en",
               theme: "LIGHT",
+              accounts: {
+                create: {
+                  type: account?.type || "oauth",
+                  provider: account?.provider || "unknown",
+                  providerAccountId: account?.providerAccountId || user.id,
+                },
+              },
+            },
+            include: {
+              accounts: true,
             },
           });
+          console.log("Created new user:", newUser);
+        } else {
+          const existingAccount = await prisma.account.findUnique({
+            where: {
+              provider_providerAccountId: {
+                provider: account?.provider || "unknown",
+                providerAccountId: account?.providerAccountId || user.id,
+              },
+            },
+          });
+
+          if (!existingAccount && account) {
+            await prisma.account.create({
+              data: {
+                userId: existingUser.id,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+              },
+            });
+            console.log(
+              `Created new account for existing user ${existingUser.id}`
+            );
+          }
         }
 
-        return true;
+        return true; // Разрешаем вход
       },
       async jwt({ token, user }) {
         if (user) {
