@@ -33,8 +33,8 @@ export const updateInventory = async (
     let errorData: unknown = null;
     try {
       errorData = await res.json();
-    } catch {
-      // Игнорируем ошибку парсинга JSON, если тело не JSON
+    } catch (error) {
+      console.warn("Failed to parse error JSON:", error);
     }
 
     if (res.status === 409) {

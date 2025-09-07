@@ -26,6 +26,7 @@ export default function HomePage({ isGuest = false }: { isGuest?: boolean }) {
   const { data: allItems = [], isLoading: loadingItems } = useQuery({
     queryKey: ["allItems"],
     queryFn: fetchAllItems,
+    refetchOnMount: "always",
   });
 
   const handleInventoryClick = (inv: Inventory) => {

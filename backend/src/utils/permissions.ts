@@ -27,17 +27,17 @@ export function canViewInventory(
 export function canEdit(user: User | null, inventory: Inventory): boolean {
   if (!user) return false;
   if (user.role === "ADMIN") return true;
-  if (inventory.creatorId === user.id) return true;
-
-  return inventory.accessList.some(
-    (a) => a.userId === user.id && a.accessLevel === "EDITOR"
-  );
+  return inventory.creatorId === user.id;
 }
 
 export function canEditItems(user: User | null, inventory: Inventory): boolean {
   if (!user) return false;
+  if (user.role === "ADMIN") return true;
+  if (inventory.creatorId === user.id) return true;
 
   if (inventory.isPublic) return true;
 
-  return canEdit(user, inventory);
+  return inventory.accessList.some(
+    (a) => a.userId === user.id && a.accessLevel === "EDITOR"
+  );
 }

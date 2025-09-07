@@ -178,11 +178,40 @@ function InventoryEditor({
 
   if (isConflict) {
     return (
-      <div className="bg-yellow-300 p-5 my-2.5 rounded-md">
-        <p>{t("inventoryConflict")}</p>
-        <button onClick={resolveConflict} className="px-3 py-2 cursor-pointer">
-          {t("mergeChanges")}
-        </button>
+      <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-xl shadow-sm flex items-start gap-3 my-4">
+        <svg
+          className="h-6 w-6 text-yellow-500 mt-0.5 flex-shrink-0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          />
+        </svg>
+        <div className="flex-1">
+          <p className="font-medium">{t("inventoryConflict")}</p>
+          <p className="text-sm text-yellow-600 mt-1">
+            {t("anotherUserEdited")}
+          </p>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={resolveConflict}
+              className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
+            >
+              {t("mergeChanges")}
+            </button>
+            <button
+              onClick={() => setIsConflict(false)}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+            >
+              {t("dismiss")}
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
